@@ -1,5 +1,5 @@
 {
-  "updated_at": "19/11/2026 15:42",
+  "updated_at": "19/11/2026 15:50",
   "ranking_7_arquiteturas": [
     {
       "architecture": "AE_LSTM1D",
@@ -6909,6 +6909,15 @@
     "comparacao_11_abordagens_rotulos.png",
     "histogramas_erro_reconstrucao_zona_operador.png",
     "comparacao_histograma_corte_unico_vs_operador.png",
+    "fig15_hist_Bomba_1305.png",
+    "fig15_hist_Bomba_1307.png",
+    "fig15_hist_Bomba_2307.png",
+    "fig15_hist_Bomba_3307.png",
+    "fig15_hist_Bomba_4307.png",
+    "fig15_hist_Bomba_5307.png",
+    "fig15_hist_Dataset_Completo.png",
+    "fig16a_ganho_f1_operador.png",
+    "fig16b_captura_fp_fn_operador.png",
     "curvas_perda_loss_7_arquiteturas.png",
     "curvas_perda_loss_por_bomba.png",
     "heatmap_rmse_bombas_vs_modelos.png",

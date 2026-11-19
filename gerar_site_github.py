@@ -67,6 +67,15 @@ def copy_figures() -> list[str]:
         (FIG_ANOM_DIR, "comparacao_11_abordagens_rotulos.png"),
         (FIG_ANOM_DIR, "histogramas_erro_reconstrucao_zona_operador.png"),
         (FIG_ANOM_DIR, "comparacao_histograma_corte_unico_vs_operador.png"),
+        (FIG_ANOM_DIR, "fig15_hist_Bomba_1305.png"),
+        (FIG_ANOM_DIR, "fig15_hist_Bomba_1307.png"),
+        (FIG_ANOM_DIR, "fig15_hist_Bomba_2307.png"),
+        (FIG_ANOM_DIR, "fig15_hist_Bomba_3307.png"),
+        (FIG_ANOM_DIR, "fig15_hist_Bomba_4307.png"),
+        (FIG_ANOM_DIR, "fig15_hist_Bomba_5307.png"),
+        (FIG_ANOM_DIR, "fig15_hist_Dataset_Completo.png"),
+        (FIG_ANOM_DIR, "fig16a_ganho_f1_operador.png"),
+        (FIG_ANOM_DIR, "fig16b_captura_fp_fn_operador.png"),
         (FIG_ANOM_DIR, "curvas_perda_loss_7_arquiteturas.png"),
         (FIG_ANOM_DIR, "curvas_perda_loss_por_bomba.png"),
         (ART_DIR, "comparacao_11_abordagens_rotulos.png"),
@@ -456,6 +465,71 @@ def build_site():
       border-radius: 8px;
       font-size: 0.9rem;
       background: #ffffff;
+    }}
+    .viewer-box {{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #ffffff;
+      padding: 1.35rem;
+      margin-top: 1.6rem;
+      box-shadow: 0 2px 10px rgba(15,23,42,0.03);
+    }}
+    .viewer-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }}
+    .viewer-tabs {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }}
+    .v-tab, .v-nav-btn {{
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 0.84rem;
+      padding: 0.42rem 0.85rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }}
+    .v-tab:hover, .v-nav-btn:hover {{
+      background: #e2e8f0;
+    }}
+    .v-tab.active {{
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }}
+    .viewer-stage {{
+      text-align: center;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }}
+    .viewer-stage img {{
+      width: 100%;
+      max-width: 1020px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      cursor: zoom-in;
+    }}
+    .viewer-caption {{
+      padding: 0.85rem 1.1rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      text-align: left;
     }}
     footer {{
       text-align: center;
@@ -927,20 +1001,43 @@ def build_site():
       </table>
     </div>
 
-    <div class="fig-grid">
-      <div class="fig-card">
-        <img src="assets/img/histogramas_erro_reconstrucao_zona_operador.png" alt="Histogramas do Erro de Reconstrução" onclick="window.open(this.src)" />
-        <div class="fig-cap">
-          <span data-lang="pt"><strong>Figura 15:</strong> Histogramas do Erro de Reconstrução por Bomba mostrando a Zona Verde (Normal), Zona Amarela (Revisão do Operador para FP/FN) e Zona Vermelha (Anomalia).</span>
-          <span data-lang="en"><strong>Figure 15:</strong> Reconstruction Error Histograms per Slurry Pump showing Green Zone (Auto Normal), Yellow Zone (Operator Review for FP/FN), and Red Zone (Auto Anomaly).</span>
+    <!-- VISUALIZADOR IMAGEM POR IMAGEM — FIGURA 15 -->
+    <div class="viewer-box">
+      <div class="viewer-header">
+        <div>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="pt">Figura 15 (Visualização Individual por Bomba): Histograma do Erro de Reconstrução e Zonas de Decisão</strong>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="en">Figure 15 (Image-by-Image Pump Viewer): Reconstruction Error Histogram &amp; Decision Zones</strong>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button type="button" class="v-nav-btn" onclick="stepFig15(-1)">◀ Anterior / Prev</button>
+          <span id="fig15Counter" style="font-weight:700;font-size:0.88rem;color:var(--muted);">1 / 7</span>
+          <button type="button" class="v-nav-btn" onclick="stepFig15(1)">Próxima / Next ▶</button>
         </div>
       </div>
-      <div class="fig-card">
-        <img src="assets/img/comparacao_histograma_corte_unico_vs_operador.png" alt="Comparação Corte Único vs Operador" onclick="window.open(this.src)" />
-        <div class="fig-cap">
-          <span data-lang="pt"><strong>Figura 16:</strong> Ganho de F1-Score e taxa de captura de erros (FP+FN) por arquitetura com a triagem do operador.</span>
-          <span data-lang="en"><strong>Figure 16:</strong> F1-Score gain and FP+FN error capture rate by architecture with operator triage.</span>
+      <div class="viewer-tabs" id="fig15Tabs" style="margin-bottom:1rem;"></div>
+      <div class="viewer-stage">
+        <img id="fig15Img" src="assets/img/fig15_hist_Bomba_1305.png" alt="Figura 15 Histograma Individual" onclick="window.open(this.src)" />
+        <div class="viewer-caption" id="fig15Cap"></div>
+      </div>
+    </div>
+
+    <!-- VISUALIZADOR IMAGEM POR IMAGEM — FIGURA 16 -->
+    <div class="viewer-box">
+      <div class="viewer-header">
+        <div>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="pt">Figura 16 (Visualização Individual por Gráfico): Ganho de F1-Score e Taxa de Captura (FP+FN) com Operador</strong>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="en">Figure 16 (Single-Chart Viewer): F1-Score Gain &amp; Error Capture Rate (FP+FN) with Operator Triage</strong>
         </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button type="button" class="v-nav-btn" onclick="stepFig16(-1)">◀ Anterior / Prev</button>
+          <span id="fig16Counter" style="font-weight:700;font-size:0.88rem;color:var(--muted);">1 / 2</span>
+          <button type="button" class="v-nav-btn" onclick="stepFig16(1)">Próxima / Next ▶</button>
+        </div>
+      </div>
+      <div class="viewer-tabs" id="fig16Tabs" style="margin-bottom:1rem;"></div>
+      <div class="viewer-stage">
+        <img id="fig16Img" src="assets/img/fig16a_ganho_f1_operador.png" alt="Figura 16 Gráfico Individual" onclick="window.open(this.src)" />
+        <div class="viewer-caption" id="fig16Cap"></div>
       </div>
     </div>
   </section>
@@ -1107,7 +1204,52 @@ def build_site():
     `).join('');
   }}
 
+  const FIG15_SLIDES = [
+    {{ label: 'Bomba_1305', src: 'assets/img/fig15_hist_Bomba_1305.png', capPt: '<strong>Figura 15 (1/7) — Bomba_1305:</strong> Histograma do Erro de Reconstrução mostrando Zona Verde (Normal Automático), Zona Amarela (Revisão do Operador: 15,8% das janelas, capturando 73,2% dos FP+FN) e Zona Vermelha (Anomalia Automática). F1 salta de 0.8697 para 0.9647.', capEn: '<strong>Figure 15 (1/7) — Bomba_1305:</strong> Reconstruction Error Histogram showing Green Zone (Auto Normal), Yellow Zone (Operator Review: 15.8% of windows, capturing 73.2% of FP+FN), and Red Zone (Auto Anomaly). F1 jumps from 0.8697 to 0.9647.' }},
+    {{ label: 'Bomba_1307', src: 'assets/img/fig15_hist_Bomba_1307.png', capPt: '<strong>Figura 15 (2/7) — Bomba_1307:</strong> Histograma do Erro de Reconstrução (AE_Transformer1D). Zona do Operador: 14,0% das janelas, capturando 79,5% dos FP+FN. F1 salta de 0.9524 para 0.9901.', capEn: '<strong>Figure 15 (2/7) — Bomba_1307:</strong> Reconstruction Error Histogram (AE_Transformer1D). Operator Zone: 14.0% of windows, capturing 79.5% of FP+FN. F1 jumps from 0.9524 to 0.9901.' }},
+    {{ label: 'Bomba_2307', src: 'assets/img/fig15_hist_Bomba_2307.png', capPt: '<strong>Figura 15 (3/7) — Bomba_2307:</strong> Histograma do Erro de Reconstrução (AE_Transformer1D). Zona do Operador: 13,5% das janelas, capturando 79,0% dos FP+FN. F1 salta de 0.9517 para 0.9898.', capEn: '<strong>Figure 15 (3/7) — Bomba_2307:</strong> Reconstruction Error Histogram (AE_Transformer1D). Operator Zone: 13.5% of windows, capturing 79.0% of FP+FN. F1 jumps from 0.9517 to 0.9898.' }},
+    {{ label: 'Bomba_3307', src: 'assets/img/fig15_hist_Bomba_3307.png', capPt: '<strong>Figura 15 (4/7) — Bomba_3307:</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: apenas 9,3% das janelas, capturando 68,0% dos FP+FN. F1 salta de 0.9588 para 0.9868.', capEn: '<strong>Figure 15 (4/7) — Bomba_3307:</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: only 9.3% of windows, capturing 68.0% of FP+FN. F1 jumps from 0.9588 to 0.9868.' }},
+    {{ label: 'Bomba_4307', src: 'assets/img/fig15_hist_Bomba_4307.png', capPt: '<strong>Figura 15 (5/7) — Bomba_4307:</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: 17,3% das janelas, capturando 78,7% dos FP+FN. F1 salta de 0.9217 para 0.9831.', capEn: '<strong>Figure 15 (5/7) — Bomba_4307:</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: 17.3% of windows, capturing 78.7% of FP+FN. F1 jumps from 0.9217 to 0.9831.' }},
+    {{ label: 'Bomba_5307', src: 'assets/img/fig15_hist_Bomba_5307.png', capPt: '<strong>Figura 15 (6/7) — Bomba_5307:</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: 13,9% das janelas, capturando 74,2% dos FP+FN. F1 salta de 0.8912 para 0.9719.', capEn: '<strong>Figure 15 (6/7) — Bomba_5307:</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: 13.9% of windows, capturing 74.2% of FP+FN. F1 jumps from 0.8912 to 0.9719.' }},
+    {{ label: 'Dataset_Completo', src: 'assets/img/fig15_hist_Dataset_Completo.png', capPt: '<strong>Figura 15 (7/7) — Dataset_Completo (6 Bombas Concatenadas):</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: 18,8% das janelas, capturando 75,5% dos FP+FN. F1 salta de 0.9204 para 0.9804.', capEn: '<strong>Figure 15 (7/7) — Dataset_Completo (All 6 Pumps Concatenated):</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: 18.8% of windows, capturing 75.5% of FP+FN. F1 jumps from 0.9204 to 0.9804.' }}
+  ];
+  let idxFig15 = 0;
+
+  const FIG16_SLIDES = [
+    {{ label: '16A: Ganho de F1-Score / F1 Gain', src: 'assets/img/fig16a_ganho_f1_operador.png', capPt: '<strong>Figura 16A (1/2) — Ganho de F1-Score por Arquitetura:</strong> Comparação direta entre Limiar Único no Histograma (cinza), Só Decisões Automáticas nas Zonas 1 e 3 (azul) e Sistema Final com Revisão do Operador na Zona 2 (verde).', capEn: '<strong>Figure 16A (1/2) — F1-Score Gain by Architecture:</strong> Direct comparison between Single Histogram Threshold (grey), Auto-Only Decisions in Zones 1 & 3 (blue), and Final System with Operator Review in Zone 2 (green).' }},
+    {{ label: '16B: Captura de FP+FN vs. Esforço / Error Capture vs. Effort', src: 'assets/img/fig16b_captura_fp_fn_operador.png', capPt: '<strong>Figura 16B (2/2) — Eficiência da Triagem do Operador:</strong> Porcentagem de erros (FP+FN) capturados na Zona Intermediária (~74,7% no AE_LSTM1D) versus porcentagem total de janelas enviadas para revisão humana (~14,9%).', capEn: '<strong>Figure 16B (2/2) — Operator Triage Efficiency:</strong> Percentage of total errors (FP+FN) captured inside the Intermediate Zone (~74.7% for AE_LSTM1D) versus percentage of windows routed for human review (~14.9%).' }}
+  ];
+  let idxFig16 = 0;
+
+  function renderFig15() {{
+    const s = FIG15_SLIDES[idxFig15];
+    document.getElementById('fig15Img').src = s.src;
+    document.getElementById('fig15Counter').textContent = (idxFig15 + 1) + ' / ' + FIG15_SLIDES.length;
+    document.getElementById('fig15Cap').innerHTML = `<span data-lang="pt">${{s.capPt}}</span><span data-lang="en">${{s.capEn}}</span>`;
+    const tabs = document.getElementById('fig15Tabs');
+    tabs.innerHTML = FIG15_SLIDES.map((item, i) =>
+      `<button type="button" class="v-tab ${{i === idxFig15 ? 'active' : ''}}" onclick="setFig15(${{i}})">${{item.label}}</button>`
+    ).join('');
+  }}
+  function setFig15(i) {{ idxFig15 = i; renderFig15(); }}
+  function stepFig15(delta) {{ idxFig15 = (idxFig15 + delta + FIG15_SLIDES.length) % FIG15_SLIDES.length; renderFig15(); }}
+
+  function renderFig16() {{
+    const s = FIG16_SLIDES[idxFig16];
+    document.getElementById('fig16Img').src = s.src;
+    document.getElementById('fig16Counter').textContent = (idxFig16 + 1) + ' / ' + FIG16_SLIDES.length;
+    document.getElementById('fig16Cap').innerHTML = `<span data-lang="pt">${{s.capPt}}</span><span data-lang="en">${{s.capEn}}</span>`;
+    const tabs = document.getElementById('fig16Tabs');
+    tabs.innerHTML = FIG16_SLIDES.map((item, i) =>
+      `<button type="button" class="v-tab ${{i === idxFig16 ? 'active' : ''}}" onclick="setFig16(${{i}})">${{item.label}}</button>`
+    ).join('');
+  }}
+  function setFig16(i) {{ idxFig16 = i; renderFig16(); }}
+  function stepFig16(delta) {{ idxFig16 = (idxFig16 + delta + FIG16_SLIDES.length) % FIG16_SLIDES.length; renderFig16(); }}
+
   window.addEventListener('DOMContentLoaded', () => {{
+    renderFig15();
+    renderFig16();
     try {{
       const savedLang = localStorage.getItem('site_lang_pref');
       if (savedLang === 'en' || savedLang === 'pt') {{
