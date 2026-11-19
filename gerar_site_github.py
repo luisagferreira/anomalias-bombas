@@ -1168,8 +1168,12 @@ def build_site():
       const opt = document.createElement('option');
       opt.value = d;
       opt.textContent = d;
+      if (d === 'Dataset_Completo') opt.selected = true;
       sel.appendChild(opt);
     }});
+    if (dsSet.includes('Dataset_Completo')) {{
+      sel.value = 'Dataset_Completo';
+    }}
 
     const archSet = [...new Set(det.map(r => r.architecture))];
     const selArch = document.getElementById('selArch');
