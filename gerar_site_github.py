@@ -177,7 +177,7 @@ def build_site():
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Detecção de Anomalias em Bombas Industriais — Dissertação & Resultados (GPU)</title>
+  <title>Detecção e Prognóstico de Anomalias em Bombas de Polpa Industriais — Portal Científico de Resultados Experimentais</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script>
     window.MathJax = {{
@@ -428,8 +428,8 @@ def build_site():
 
 <header class="hero">
   <div class="container">
-    <h1>Detecção e Prognóstico de Anomalias em Bombas Centrífugas Industriais com Autoencoders 1D, 2D (GADF) e Híbridos Multimodais</h1>
-    <p>Portal Científico de Resultados Experimentais em GPU (NVIDIA GeForce RTX 5080) e Texto Acadêmico em Formato de Dissertação</p>
+    <h1>Detecção e Prognóstico de Anomalias em Bombas de Polpa Industriais com Autoencoders 1D, 2D (GADF) e Híbridos Multimodais</h1>
+    <p>Portal Científico de Resultados Experimentais</p>
     <div class="meta-bar">
       <span class="chip">Framework: PyTorch 2.x + CUDA</span>
       <span class="chip">Hardware: NVIDIA RTX 5080 (16 GB VRAM)</span>
