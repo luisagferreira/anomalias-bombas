@@ -480,7 +480,7 @@ def build_site():
       </div>
       <div class="lang-switch" role="group" aria-label="Language Selector">
         <button type="button" class="lang-btn active" id="btnLangPt" onclick="setLanguage('pt')">🇧🇷 Português</button>
-        <button type="button" class="lang-btn" id="btnLangEn" onclick="setLanguage('en')">🇺🇸 English</button>
+        <button type="button" class="lang-btn" id="btnLangEn" onclick="setLanguage('en')">🇨🇦 English</button>
       </div>
     </div>
     <div class="meta-bar">
