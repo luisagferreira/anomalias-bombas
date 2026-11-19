@@ -66,6 +66,8 @@ def copy_figures() -> list[str]:
         (FIG_ANOM_DIR, "comparacao_11_abordagens_rotulos.png"),
         (FIG_ANOM_DIR, "histogramas_erro_reconstrucao_zona_operador.png"),
         (FIG_ANOM_DIR, "comparacao_histograma_corte_unico_vs_operador.png"),
+        (FIG_ANOM_DIR, "curvas_perda_loss_7_arquiteturas.png"),
+        (FIG_ANOM_DIR, "curvas_perda_loss_por_bomba.png"),
         (ART_DIR, "comparacao_11_abordagens_rotulos.png"),
         (ART_DIR, "matrizes_confusao_ano_acima_2_5_15min.png"),
         (ART_DIR, "heatmap_rmse_bombas_vs_modelos.png"),
@@ -643,12 +645,20 @@ def build_site():
 
     <div class="fig-grid">
       <div class="fig-card">
+        <img src="assets/img/curvas_perda_loss_7_arquiteturas.png" alt="Curvas de Perda Loss 7 Arquiteturas" onclick="window.open(this.src)" />
+        <div class="fig-cap"><strong>Figura 10:</strong> Curvas de Perda (Loss de Reconstrução MSE) no Treinamento vs. Validação (±1 DP nos 5 Folds) para as 7 Arquiteturas em GPU.</div>
+      </div>
+      <div class="fig-card">
+        <img src="assets/img/curvas_perda_loss_por_bomba.png" alt="Curvas de Perda Loss por Bomba" onclick="window.open(this.src)" />
+        <div class="fig-cap"><strong>Figura 11:</strong> Convergência da Perda (Loss de Treino vs. Validação) individualizada para cada Bomba e para o Dataset Completo.</div>
+      </div>
+      <div class="fig-card">
         <img src="assets/img/matrizes_confusao_ano_acima_2_5_15min.png" alt="Matrizes de Confusão" onclick="window.open(this.src)" />
-        <div class="fig-cap"><strong>Figura 10:</strong> Matrizes de Confusão Out-of-Fold (5 Folds) em 100% do Dataset Anual.</div>
+        <div class="fig-cap"><strong>Figura 12:</strong> Matrizes de Confusão Out-of-Fold (5 Folds) em 100% do Dataset Anual.</div>
       </div>
       <div class="fig-card">
         <img src="assets/img/comparacao_arquiteturas_por_janela.png" alt="Comparação por Janela" onclick="window.open(this.src)" />
-        <div class="fig-cap"><strong>Figura 11:</strong> Desempenho comparativo das arquiteturas através das 4 escalas de janela temporal.</div>
+        <div class="fig-cap"><strong>Figura 13:</strong> Desempenho comparativo das arquiteturas através das 4 escalas de janela temporal.</div>
       </div>
     </div>
   </section>

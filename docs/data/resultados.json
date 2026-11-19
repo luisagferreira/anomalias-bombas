@@ -1,5 +1,5 @@
 {
-  "updated_at": "19/11/2026 12:08",
+  "updated_at": "19/11/2026 14:53",
   "ranking_7_arquiteturas": [
     {
       "architecture": "AE_LSTM1D",
@@ -6909,6 +6909,8 @@
     "comparacao_11_abordagens_rotulos.png",
     "histogramas_erro_reconstrucao_zona_operador.png",
     "comparacao_histograma_corte_unico_vs_operador.png",
+    "curvas_perda_loss_7_arquiteturas.png",
+    "curvas_perda_loss_por_bomba.png",
     "heatmap_rmse_bombas_vs_modelos.png",
     "comparacao_arquiteturas_por_janela.png"
   ]
