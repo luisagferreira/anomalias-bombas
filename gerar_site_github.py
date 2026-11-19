@@ -969,6 +969,11 @@ def build_site():
           <option value="2h">2h (L=720)</option>
         </select>
       </label>
+      <label><strong data-lang="pt">Filtrar Arquitetura:</strong><strong data-lang="en">Filter Architecture:</strong>
+        <select id="selArch" onchange="renderDetailTable()">
+          <option value="ALL">ALL (7 Architectures)</option>
+        </select>
+      </label>
     </div>
 
     <div class="table-wrap">
@@ -1060,6 +1065,16 @@ def build_site():
       opt.textContent = d;
       sel.appendChild(opt);
     }});
+
+    const archSet = [...new Set(det.map(r => r.architecture))];
+    const selArch = document.getElementById('selArch');
+    archSet.forEach(a => {{
+      const opt = document.createElement('option');
+      opt.value = a;
+      opt.textContent = a;
+      selArch.appendChild(opt);
+    }});
+
     renderDetailTable();
   }}
 
@@ -1067,9 +1082,14 @@ def build_site():
     const det = SITE_DATA.detalhe_bomba_janela || [];
     const fDs = document.getElementById('selDataset').value;
     const fWin = document.getElementById('selWindow').value;
-    const filtered = det.filter(r => (fDs === 'ALL' || r.dataset === fDs) && (fWin === 'ALL' || r.window === fWin));
+    const fArch = document.getElementById('selArch').value;
+    const filtered = det.filter(r =>
+      (fDs === 'ALL' || r.dataset === fDs) &&
+      (fWin === 'ALL' || r.window === fWin) &&
+      (fArch === 'ALL' || r.architecture === fArch)
+    );
     const tbody = document.getElementById('detailTableBody');
-    tbody.innerHTML = filtered.slice(0, 140).map(r => `
+    tbody.innerHTML = filtered.map(r => `
       <tr>
         <td><strong>${{r.dataset}}</strong></td>
         <td>${{r.window}}</td>
