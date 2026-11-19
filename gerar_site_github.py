@@ -52,45 +52,19 @@ def load_csv_records(filename: str, fallback_root: bool = True) -> list[dict]:
 def copy_figures() -> list[str]:
     os.makedirs(IMG_OUT_DIR, exist_ok=True)
     copied = []
-    candidates = [
-        (FIG_ARCH_DIR, "fluxo_trabalho_e_decisoes_arquitetura.png"),
-        (FIG_ARCH_DIR, "arquitetura_painel_comparativo_7_modelos.png"),
-        (FIG_ARCH_DIR, "arquitetura_AE_CNN1D.png"),
-        (FIG_ARCH_DIR, "arquitetura_AE_LSTM1D.png"),
-        (FIG_ARCH_DIR, "arquitetura_AE_Transformer1D.png"),
-        (FIG_ARCH_DIR, "arquitetura_AE_CNN2D_GAF.png"),
-        (FIG_ARCH_DIR, "arquitetura_Hybrid_CNN1D_CNN2D.png"),
-        (FIG_ARCH_DIR, "arquitetura_Hybrid_LSTM1D_CNN2D.png"),
-        (FIG_ARCH_DIR, "arquitetura_Hybrid_Transformer_CNN2D.png"),
-        (FIG_ARCH_DIR, "arquitetura_Hibridos_Multimodais.png"),
-        (FIG_ANOM_DIR, "matrizes_confusao_ano_acima_2_5_15min.png"),
-        (FIG_ANOM_DIR, "comparacao_11_abordagens_rotulos.png"),
-        (FIG_ANOM_DIR, "histogramas_erro_reconstrucao_zona_operador.png"),
-        (FIG_ANOM_DIR, "comparacao_histograma_corte_unico_vs_operador.png"),
-        (FIG_ANOM_DIR, "fig15_hist_Bomba_1305.png"),
-        (FIG_ANOM_DIR, "fig15_hist_Bomba_1307.png"),
-        (FIG_ANOM_DIR, "fig15_hist_Bomba_2307.png"),
-        (FIG_ANOM_DIR, "fig15_hist_Bomba_3307.png"),
-        (FIG_ANOM_DIR, "fig15_hist_Bomba_4307.png"),
-        (FIG_ANOM_DIR, "fig15_hist_Bomba_5307.png"),
-        (FIG_ANOM_DIR, "fig15_hist_Dataset_Completo.png"),
-        (FIG_ANOM_DIR, "fig16a_ganho_f1_operador.png"),
-        (FIG_ANOM_DIR, "fig16b_captura_fp_fn_operador.png"),
-        (FIG_ANOM_DIR, "curvas_perda_loss_7_arquiteturas.png"),
-        (FIG_ANOM_DIR, "curvas_perda_loss_por_bomba.png"),
-        (ART_DIR, "comparacao_11_abordagens_rotulos.png"),
-        (ART_DIR, "matrizes_confusao_ano_acima_2_5_15min.png"),
-        (ART_DIR, "heatmap_rmse_bombas_vs_modelos.png"),
-        (ART_DIR, "comparacao_arquiteturas_por_janela.png"),
-    ]
-    for src_dir, fname in candidates:
-        src = os.path.join(src_dir, fname)
-        dst = os.path.join(IMG_OUT_DIR, fname)
-        if os.path.isfile(src):
-            shutil.copy2(src, dst)
-            if fname not in copied:
-                copied.append(fname)
-    return copied
+    for src_dir in (FIG_ARCH_DIR, FIG_ANOM_DIR, ART_DIR):
+        if not os.path.isdir(src_dir):
+            continue
+        for fname in os.listdir(src_dir):
+            if not fname.lower().endswith(".png"):
+                continue
+            src = os.path.join(src_dir, fname)
+            dst = os.path.join(IMG_OUT_DIR, fname)
+            if os.path.isfile(src):
+                shutil.copy2(src, dst)
+                if fname not in copied:
+                    copied.append(fname)
+    return sorted(copied)
 
 
 def build_site():
@@ -771,48 +745,23 @@ def build_site():
     <p style="margin-bottom:1rem;color:var(--muted);" data-lang="en">
       All 7 architectures share the exact same latent bottleneck ($Z = 32$) for fair comparison. Click any figure to open it in full resolution.
     </p>
-    <div class="fig-grid">
-      <div class="fig-card">
-        <img src="assets/img/fluxo_trabalho_e_decisoes_arquitetura.png" alt="Fluxo Metodológico" onclick="window.open(this.src)" />
-        <div class="fig-cap">
-          <span data-lang="pt"><strong>Figura 1:</strong> Fluxo de Trabalho End-to-End e Decisões Metodológicas do Pipeline.</span>
-          <span data-lang="en"><strong>Figure 1:</strong> End-to-End Workflow and Methodological Pipeline Decisions.</span>
+    <!-- VISUALIZADOR IMAGEM POR IMAGEM — FIGURAS 1 A 9 (ARQUITETURAS PYTORCH) -->
+    <div class="viewer-box">
+      <div class="viewer-header">
+        <div>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="pt">Figuras 1 a 9 (Visualização Individual): Fluxo Metodológico e Arquiteturas PyTorch (torchviz + torchinfo.summary)</strong>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="en">Figures 1 to 9 (Image-by-Image Viewer): Methodological Workflow &amp; PyTorch Architectures (torchviz + torchinfo.summary)</strong>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button type="button" class="v-nav-btn" onclick="stepViewer('arch', -1)">◀ Anterior / Prev</button>
+          <span id="archCounter" style="font-weight:700;font-size:0.88rem;color:var(--muted);">1 / 9</span>
+          <button type="button" class="v-nav-btn" onclick="stepViewer('arch', 1)">Próxima / Next ▶</button>
         </div>
       </div>
-      <div class="fig-card">
-        <img src="assets/img/arquitetura_painel_comparativo_7_modelos.png" alt="Painel 7 Modelos" onclick="window.open(this.src)" />
-        <div class="fig-cap">
-          <span data-lang="pt"><strong>Figura 2:</strong> Painel Comparativo das 7 Arquiteturas Avaliadas ($Z = 32$).</span>
-          <span data-lang="en"><strong>Figure 2:</strong> Comparative Panel of the 7 Evaluated Architectures ($Z = 32$).</span>
-        </div>
-      </div>
-      <div class="fig-card">
-        <img src="assets/img/arquitetura_AE_CNN1D.png" alt="AE_CNN1D" onclick="window.open(this.src)" />
-        <div class="fig-cap"><strong>Fig. 3:</strong> <code>AE_CNN1D</code> (torchviz + torchinfo.summary).</div>
-      </div>
-      <div class="fig-card">
-        <img src="assets/img/arquitetura_AE_LSTM1D.png" alt="AE_LSTM1D" onclick="window.open(this.src)" />
-        <div class="fig-cap"><strong>Fig. 4:</strong> <code>AE_LSTM1D</code> Patch-LSTM (torchviz + torchinfo.summary).</div>
-      </div>
-      <div class="fig-card">
-        <img src="assets/img/arquitetura_AE_Transformer1D.png" alt="AE_Transformer1D" onclick="window.open(this.src)" />
-        <div class="fig-cap"><strong>Fig. 5:</strong> <code>AE_Transformer1D</code> Patch-Transformer (torchviz + torchinfo.summary).</div>
-      </div>
-      <div class="fig-card">
-        <img src="assets/img/arquitetura_AE_CNN2D_GAF.png" alt="AE_CNN2D_GAF" onclick="window.open(this.src)" />
-        <div class="fig-cap"><strong>Fig. 6:</strong> <code>AE_CNN2D_GAF</code> GADF $32\\times 32$ (torchviz + torchinfo.summary).</div>
-      </div>
-      <div class="fig-card">
-        <img src="assets/img/arquitetura_Hybrid_CNN1D_CNN2D.png" alt="Hybrid_CNN1D_CNN2D" onclick="window.open(this.src)" />
-        <div class="fig-cap"><strong>Fig. 7:</strong> <code>Hybrid_CNN1D_CNN2D</code> Multimodal (torchviz + torchinfo.summary).</div>
-      </div>
-      <div class="fig-card">
-        <img src="assets/img/arquitetura_Hybrid_LSTM1D_CNN2D.png" alt="Hybrid_LSTM1D_CNN2D" onclick="window.open(this.src)" />
-        <div class="fig-cap"><strong>Fig. 8:</strong> <code>Hybrid_LSTM1D_CNN2D</code> Multimodal (torchviz + torchinfo.summary).</div>
-      </div>
-      <div class="fig-card">
-        <img src="assets/img/arquitetura_Hybrid_Transformer_CNN2D.png" alt="Hybrid_Transformer_CNN2D" onclick="window.open(this.src)" />
-        <div class="fig-cap"><strong>Fig. 9:</strong> <code>Hybrid_Transformer_CNN2D</code> Multimodal (torchviz + torchinfo.summary).</div>
+      <div class="viewer-tabs" id="archTabs" style="margin-bottom:1rem;"></div>
+      <div class="viewer-stage">
+        <img id="archImg" src="assets/img/fluxo_trabalho_e_decisoes_arquitetura.png" alt="Arquitetura PyTorch Individual" onclick="window.open(this.src)" />
+        <div class="viewer-caption" id="archCap"></div>
       </div>
     </div>
   </section>
@@ -891,34 +840,83 @@ def build_site():
       </table>
     </div>
 
-    <div class="fig-grid">
-      <div class="fig-card">
-        <img src="assets/img/curvas_perda_loss_7_arquiteturas.png" alt="Curvas de Perda Loss 7 Arquiteturas" onclick="window.open(this.src)" />
-        <div class="fig-cap">
-          <span data-lang="pt"><strong>Figura 10:</strong> Curvas de Perda (Loss de Reconstrução MSE) no Treinamento vs. Validação (±1 DP nos 5 Folds) para as 7 Arquiteturas em GPU.</span>
-          <span data-lang="en"><strong>Figure 10:</strong> Training vs. Validation Reconstruction Loss Curves (MSE ±1 SD across 5 Folds) for the 7 Architectures on GPU.</span>
+    <!-- VISUALIZADOR IMAGEM POR IMAGEM — FIGURA 10 (CURVAS DE LOSS POR ARQUITETURA) -->
+    <div class="viewer-box">
+      <div class="viewer-header">
+        <div>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="pt">Figura 10 (Visualização Individual por Arquitetura): Curvas de Perda (Loss MSE) no Treino vs. Validação</strong>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="en">Figure 10 (Image-by-Image Architecture Viewer): Training vs. Validation Reconstruction Loss Curves (MSE)</strong>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button type="button" class="v-nav-btn" onclick="stepViewer('fig10', -1)">◀ Anterior / Prev</button>
+          <span id="fig10Counter" style="font-weight:700;font-size:0.88rem;color:var(--muted);">1 / 8</span>
+          <button type="button" class="v-nav-btn" onclick="stepViewer('fig10', 1)">Próxima / Next ▶</button>
         </div>
       </div>
-      <div class="fig-card">
-        <img src="assets/img/curvas_perda_loss_por_bomba.png" alt="Curvas de Perda Loss por Bomba" onclick="window.open(this.src)" />
-        <div class="fig-cap">
-          <span data-lang="pt"><strong>Figura 11:</strong> Convergência da Perda (Loss de Treino vs. Validação) individualizada para cada Bomba e para o Dataset Completo.</span>
-          <span data-lang="en"><strong>Figure 11:</strong> Training vs. Validation Loss Convergence per Individual Slurry Pump and Full Dataset.</span>
+      <div class="viewer-tabs" id="fig10Tabs" style="margin-bottom:1rem;"></div>
+      <div class="viewer-stage">
+        <img id="fig10Img" src="assets/img/fig10_loss_AE_CNN1D.png" alt="Figura 10 Loss por Arquitetura" onclick="window.open(this.src)" />
+        <div class="viewer-caption" id="fig10Cap"></div>
+      </div>
+    </div>
+
+    <!-- VISUALIZADOR IMAGEM POR IMAGEM — FIGURA 11 (CURVAS DE LOSS POR BOMBA) -->
+    <div class="viewer-box">
+      <div class="viewer-header">
+        <div>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="pt">Figura 11 (Visualização Individual por Bomba): Convergência da Perda (Loss) no Treino e Validação</strong>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="en">Figure 11 (Image-by-Image Pump Viewer): Training &amp; Validation Loss Convergence per Slurry Pump</strong>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button type="button" class="v-nav-btn" onclick="stepViewer('fig11', -1)">◀ Anterior / Prev</button>
+          <span id="fig11Counter" style="font-weight:700;font-size:0.88rem;color:var(--muted);">1 / 7</span>
+          <button type="button" class="v-nav-btn" onclick="stepViewer('fig11', 1)">Próxima / Next ▶</button>
         </div>
       </div>
-      <div class="fig-card">
-        <img src="assets/img/matrizes_confusao_ano_acima_2_5_15min.png" alt="Matrizes de Confusão" onclick="window.open(this.src)" />
-        <div class="fig-cap">
-          <span data-lang="pt"><strong>Figura 12:</strong> Matrizes de Confusão Out-of-Fold (5 Folds) em 100% do Dataset Anual.</span>
-          <span data-lang="en"><strong>Figure 12:</strong> Out-of-Fold Confusion Matrices (5 Folds) on 100% of the Annual Dataset.</span>
+      <div class="viewer-tabs" id="fig11Tabs" style="margin-bottom:1rem;"></div>
+      <div class="viewer-stage">
+        <img id="fig11Img" src="assets/img/fig11_loss_Bomba_1305.png" alt="Figura 11 Loss por Bomba" onclick="window.open(this.src)" />
+        <div class="viewer-caption" id="fig11Cap"></div>
+      </div>
+    </div>
+
+    <!-- VISUALIZADOR IMAGEM POR IMAGEM — FIGURA 12 (MATRIZES DE CONFUSÃO POR BOMBA) -->
+    <div class="viewer-box">
+      <div class="viewer-header">
+        <div>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="pt">Figura 12 (Visualização Individual por Bomba): Matrizes de Confusão Out-of-Fold (5 Folds)</strong>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="en">Figure 12 (Image-by-Image Pump Viewer): Out-of-Fold Confusion Matrices (5 Folds)</strong>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button type="button" class="v-nav-btn" onclick="stepViewer('fig12', -1)">◀ Anterior / Prev</button>
+          <span id="fig12Counter" style="font-weight:700;font-size:0.88rem;color:var(--muted);">1 / 7</span>
+          <button type="button" class="v-nav-btn" onclick="stepViewer('fig12', 1)">Próxima / Next ▶</button>
         </div>
       </div>
-      <div class="fig-card">
-        <img src="assets/img/comparacao_arquiteturas_por_janela.png" alt="Comparação por Janela" onclick="window.open(this.src)" />
-        <div class="fig-cap">
-          <span data-lang="pt"><strong>Figura 13:</strong> Desempenho comparativo das arquiteturas através das 4 escalas de janela temporal.</span>
-          <span data-lang="en"><strong>Figure 13:</strong> Comparative architecture performance across the 4 sliding window time scales.</span>
+      <div class="viewer-tabs" id="fig12Tabs" style="margin-bottom:1rem;"></div>
+      <div class="viewer-stage">
+        <img id="fig12Img" src="assets/img/fig12_cm_Bomba_1305.png" alt="Figura 12 Matriz de Confusão" onclick="window.open(this.src)" />
+        <div class="viewer-caption" id="fig12Cap"></div>
+      </div>
+    </div>
+
+    <!-- VISUALIZADOR IMAGEM POR IMAGEM — FIGURA 13 (DESEMPENHO POR ESCALA DE JANELA) -->
+    <div class="viewer-box">
+      <div class="viewer-header">
+        <div>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="pt">Figura 13 (Visualização Individual por Métrica): Comparação nas 4 Escalas de Janela Temporal (15m, 30m, 1h, 2h)</strong>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="en">Figure 13 (Single-Chart Metric Viewer): Comparison Across the 4 Sliding Window Time Scales (15m, 30m, 1h, 2h)</strong>
         </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button type="button" class="v-nav-btn" onclick="stepViewer('fig13', -1)">◀ Anterior / Prev</button>
+          <span id="fig13Counter" style="font-weight:700;font-size:0.88rem;color:var(--muted);">1 / 4</span>
+          <button type="button" class="v-nav-btn" onclick="stepViewer('fig13', 1)">Próxima / Next ▶</button>
+        </div>
+      </div>
+      <div class="viewer-tabs" id="fig13Tabs" style="margin-bottom:1rem;"></div>
+      <div class="viewer-stage">
+        <img id="fig13Img" src="assets/img/fig13a_janela_roc_auc.png" alt="Figura 13 Comparação por Janela" onclick="window.open(this.src)" />
+        <div class="viewer-caption" id="fig13Cap"></div>
       </div>
     </div>
   </section>
@@ -954,13 +952,23 @@ def build_site():
       </table>
     </div>
 
-    <div class="fig-grid">
-      <div class="fig-card" style="grid-column: 1 / -1;">
-        <img src="assets/img/comparacao_11_abordagens_rotulos.png" alt="Comparação 11 Abordagens" onclick="window.open(this.src)" />
-        <div class="fig-cap">
-          <span data-lang="pt"><strong>Figura 14:</strong> Painel Comparativo Global das 11 Formulações de Rótulos executadas na GPU RTX 5080.</span>
-          <span data-lang="en"><strong>Figure 14:</strong> Global Comparative Panel of the 11 Label Formulations executed on the RTX 5080 GPU.</span>
+    <!-- VISUALIZADOR IMAGEM POR IMAGEM — FIGURA 14 (11 FORMULAÇÕES DE RÓTULOS) -->
+    <div class="viewer-box">
+      <div class="viewer-header">
+        <div>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="pt">Figura 14 (Visualização Individual por Métrica): Comparação Global das 11 Formulações de Rótulos</strong>
+          <strong style="font-size:1.05rem;color:var(--primary);" data-lang="en">Figure 14 (Single-Chart Metric Viewer): Global Comparison of the 11 Label Formulations</strong>
         </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <button type="button" class="v-nav-btn" onclick="stepViewer('fig14', -1)">◀ Anterior / Prev</button>
+          <span id="fig14Counter" style="font-weight:700;font-size:0.88rem;color:var(--muted);">1 / 4</span>
+          <button type="button" class="v-nav-btn" onclick="stepViewer('fig14', 1)">Próxima / Next ▶</button>
+        </div>
+      </div>
+      <div class="viewer-tabs" id="fig14Tabs" style="margin-bottom:1rem;"></div>
+      <div class="viewer-stage">
+        <img id="fig14Img" src="assets/img/fig14a_rotulos_roc_pr.png" alt="Figura 14 11 Abordagens" onclick="window.open(this.src)" />
+        <div class="viewer-caption" id="fig14Cap"></div>
       </div>
     </div>
   </section>
@@ -1204,52 +1212,119 @@ def build_site():
     `).join('');
   }}
 
-  const FIG15_SLIDES = [
-    {{ label: 'Bomba_1305', src: 'assets/img/fig15_hist_Bomba_1305.png', capPt: '<strong>Figura 15 (1/7) — Bomba_1305:</strong> Histograma do Erro de Reconstrução mostrando Zona Verde (Normal Automático), Zona Amarela (Revisão do Operador: 15,8% das janelas, capturando 73,2% dos FP+FN) e Zona Vermelha (Anomalia Automática). F1 salta de 0.8697 para 0.9647.', capEn: '<strong>Figure 15 (1/7) — Bomba_1305:</strong> Reconstruction Error Histogram showing Green Zone (Auto Normal), Yellow Zone (Operator Review: 15.8% of windows, capturing 73.2% of FP+FN), and Red Zone (Auto Anomaly). F1 jumps from 0.8697 to 0.9647.' }},
-    {{ label: 'Bomba_1307', src: 'assets/img/fig15_hist_Bomba_1307.png', capPt: '<strong>Figura 15 (2/7) — Bomba_1307:</strong> Histograma do Erro de Reconstrução (AE_Transformer1D). Zona do Operador: 14,0% das janelas, capturando 79,5% dos FP+FN. F1 salta de 0.9524 para 0.9901.', capEn: '<strong>Figure 15 (2/7) — Bomba_1307:</strong> Reconstruction Error Histogram (AE_Transformer1D). Operator Zone: 14.0% of windows, capturing 79.5% of FP+FN. F1 jumps from 0.9524 to 0.9901.' }},
-    {{ label: 'Bomba_2307', src: 'assets/img/fig15_hist_Bomba_2307.png', capPt: '<strong>Figura 15 (3/7) — Bomba_2307:</strong> Histograma do Erro de Reconstrução (AE_Transformer1D). Zona do Operador: 13,5% das janelas, capturando 79,0% dos FP+FN. F1 salta de 0.9517 para 0.9898.', capEn: '<strong>Figure 15 (3/7) — Bomba_2307:</strong> Reconstruction Error Histogram (AE_Transformer1D). Operator Zone: 13.5% of windows, capturing 79.0% of FP+FN. F1 jumps from 0.9517 to 0.9898.' }},
-    {{ label: 'Bomba_3307', src: 'assets/img/fig15_hist_Bomba_3307.png', capPt: '<strong>Figura 15 (4/7) — Bomba_3307:</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: apenas 9,3% das janelas, capturando 68,0% dos FP+FN. F1 salta de 0.9588 para 0.9868.', capEn: '<strong>Figure 15 (4/7) — Bomba_3307:</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: only 9.3% of windows, capturing 68.0% of FP+FN. F1 jumps from 0.9588 to 0.9868.' }},
-    {{ label: 'Bomba_4307', src: 'assets/img/fig15_hist_Bomba_4307.png', capPt: '<strong>Figura 15 (5/7) — Bomba_4307:</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: 17,3% das janelas, capturando 78,7% dos FP+FN. F1 salta de 0.9217 para 0.9831.', capEn: '<strong>Figure 15 (5/7) — Bomba_4307:</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: 17.3% of windows, capturing 78.7% of FP+FN. F1 jumps from 0.9217 to 0.9831.' }},
-    {{ label: 'Bomba_5307', src: 'assets/img/fig15_hist_Bomba_5307.png', capPt: '<strong>Figura 15 (6/7) — Bomba_5307:</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: 13,9% das janelas, capturando 74,2% dos FP+FN. F1 salta de 0.8912 para 0.9719.', capEn: '<strong>Figure 15 (6/7) — Bomba_5307:</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: 13.9% of windows, capturing 74.2% of FP+FN. F1 jumps from 0.8912 to 0.9719.' }},
-    {{ label: 'Dataset_Completo', src: 'assets/img/fig15_hist_Dataset_Completo.png', capPt: '<strong>Figura 15 (7/7) — Dataset_Completo (6 Bombas Concatenadas):</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: 18,8% das janelas, capturando 75,5% dos FP+FN. F1 salta de 0.9204 para 0.9804.', capEn: '<strong>Figure 15 (7/7) — Dataset_Completo (All 6 Pumps Concatenated):</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: 18.8% of windows, capturing 75.5% of FP+FN. F1 jumps from 0.9204 to 0.9804.' }}
-  ];
-  let idxFig15 = 0;
+  const VIEWERS = {{
+    arch: {{
+      idx: 0,
+      slides: [
+        {{ label: '1. Fluxo do Pipeline', src: 'assets/img/fluxo_trabalho_e_decisoes_arquitetura.png', capPt: '<strong>Figura 1 (1/9):</strong> Fluxo de Trabalho End-to-End e Decisões Metodológicas do Pipeline.', capEn: '<strong>Figure 1 (1/9):</strong> End-to-End Workflow and Methodological Pipeline Decisions.' }},
+        {{ label: '2. Painel 7 Modelos', src: 'assets/img/arquitetura_painel_comparativo_7_modelos.png', capPt: '<strong>Figura 2 (2/9):</strong> Painel Comparativo das 7 Arquiteturas Avaliadas ($Z = 32$).', capEn: '<strong>Figure 2 (2/9):</strong> Comparative Panel of the 7 Evaluated Architectures ($Z = 32$).' }},
+        {{ label: '3. AE_CNN1D', src: 'assets/img/arquitetura_AE_CNN1D.png', capPt: '<strong>Figura 3 (3/9) — AE_CNN1D:</strong> Grafo Computacional Autograd (torchviz) e Resumo Estrutural (torchinfo.summary).', capEn: '<strong>Figure 3 (3/9) — AE_CNN1D:</strong> Autograd Computational Graph (torchviz) and Structural Summary (torchinfo.summary).' }},
+        {{ label: '4. AE_LSTM1D', src: 'assets/img/arquitetura_AE_LSTM1D.png', capPt: '<strong>Figura 4 (4/9) — AE_LSTM1D:</strong> Patch-LSTM Bidirecional 1D (torchviz + torchinfo.summary).', capEn: '<strong>Figure 4 (4/9) — AE_LSTM1D:</strong> Bidirectional 1D Patch-LSTM (torchviz + torchinfo.summary).' }},
+        {{ label: '5. AE_Transformer1D', src: 'assets/img/arquitetura_AE_Transformer1D.png', capPt: '<strong>Figura 5 (5/9) — AE_Transformer1D:</strong> Patch-Transformer 1D com Multi-Head Self-Attention (torchviz + torchinfo.summary).', capEn: '<strong>Figure 5 (5/9) — AE_Transformer1D:</strong> 1D Patch-Transformer with Multi-Head Self-Attention (torchviz + torchinfo.summary).' }},
+        {{ label: '6. AE_CNN2D_GAF', src: 'assets/img/arquitetura_AE_CNN2D_GAF.png', capPt: '<strong>Figura 6 (6/9) — AE_CNN2D_GAF:</strong> Autoencoder Convolucional 2D operando exclusivamente sobre GADF 32×32 (torchviz + torchinfo.summary).', capEn: '<strong>Figure 6 (6/9) — AE_CNN2D_GAF:</strong> 2D Convolutional Autoencoder operating exclusively on 32×32 GADF (torchviz + torchinfo.summary).' }},
+        {{ label: '7. Hybrid_CNN1D_CNN2D', src: 'assets/img/arquitetura_Hybrid_CNN1D_CNN2D.png', capPt: '<strong>Figura 7 (7/9) — Hybrid_CNN1D_CNN2D:</strong> Fusão Multimodal CNN-1D + CNN-2D GADF (torchviz + torchinfo.summary).', capEn: '<strong>Figure 7 (7/9) — Hybrid_CNN1D_CNN2D:</strong> Multimodal Fusion CNN-1D + CNN-2D GADF (torchviz + torchinfo.summary).' }},
+        {{ label: '8. Hybrid_LSTM1D_CNN2D', src: 'assets/img/arquitetura_Hybrid_LSTM1D_CNN2D.png', capPt: '<strong>Figura 8 (8/9) — Hybrid_LSTM1D_CNN2D:</strong> Fusão Multimodal LSTM-1D + CNN-2D GADF (torchviz + torchinfo.summary).', capEn: '<strong>Figure 8 (8/9) — Hybrid_LSTM1D_CNN2D:</strong> Multimodal Fusion LSTM-1D + CNN-2D GADF (torchviz + torchinfo.summary).' }},
+        {{ label: '9. Hybrid_Transformer_CNN2D', src: 'assets/img/arquitetura_Hybrid_Transformer_CNN2D.png', capPt: '<strong>Figura 9 (9/9) — Hybrid_Transformer_CNN2D:</strong> Fusão Multimodal Transformer-1D + CNN-2D GADF (torchviz + torchinfo.summary).', capEn: '<strong>Figure 9 (9/9) — Hybrid_Transformer_CNN2D:</strong> Multimodal Fusion Transformer-1D + CNN-2D GADF (torchviz + torchinfo.summary).' }}
+      ]
+    }},
+    fig10: {{
+      idx: 0,
+      slides: [
+        {{ label: '1. AE_CNN1D', src: 'assets/img/fig10_loss_AE_CNN1D.png', capPt: '<strong>Figura 10 (1/8) — AE_CNN1D:</strong> Curva de Perda (Loss MSE) de Treino vs. Validação (±1 DP nos 5 Folds).', capEn: '<strong>Figure 10 (1/8) — AE_CNN1D:</strong> Training vs. Validation Reconstruction Loss Curve (MSE ±1 SD across 5 Folds).' }},
+        {{ label: '2. AE_LSTM1D', src: 'assets/img/fig10_loss_AE_LSTM1D.png', capPt: '<strong>Figura 10 (2/8) — AE_LSTM1D:</strong> Curva de Perda (Loss MSE) de Treino vs. Validação (±1 DP nos 5 Folds).', capEn: '<strong>Figure 10 (2/8) — AE_LSTM1D:</strong> Training vs. Validation Reconstruction Loss Curve (MSE ±1 SD across 5 Folds).' }},
+        {{ label: '3. AE_Transformer1D', src: 'assets/img/fig10_loss_AE_Transformer1D.png', capPt: '<strong>Figura 10 (3/8) — AE_Transformer1D:</strong> Curva de Perda (Loss MSE) de Treino vs. Validação (±1 DP nos 5 Folds).', capEn: '<strong>Figure 10 (3/8) — AE_Transformer1D:</strong> Training vs. Validation Reconstruction Loss Curve (MSE ±1 SD across 5 Folds).' }},
+        {{ label: '4. AE_CNN2D_GAF', src: 'assets/img/fig10_loss_AE_CNN2D_GAF.png', capPt: '<strong>Figura 10 (4/8) — AE_CNN2D_GAF:</strong> Curva de Perda (Loss MSE) de Treino vs. Validação (±1 DP nos 5 Folds).', capEn: '<strong>Figure 10 (4/8) — AE_CNN2D_GAF:</strong> Training vs. Validation Reconstruction Loss Curve (MSE ±1 SD across 5 Folds).' }},
+        {{ label: '5. Hybrid_CNN1D_CNN2D', src: 'assets/img/fig10_loss_Hybrid_CNN1D_CNN2D.png', capPt: '<strong>Figura 10 (5/8) — Hybrid_CNN1D_CNN2D:</strong> Curva de Perda (Loss MSE) de Treino vs. Validação (±1 DP nos 5 Folds).', capEn: '<strong>Figure 10 (5/8) — Hybrid_CNN1D_CNN2D:</strong> Training vs. Validation Reconstruction Loss Curve (MSE ±1 SD across 5 Folds).' }},
+        {{ label: '6. Hybrid_LSTM1D_CNN2D', src: 'assets/img/fig10_loss_Hybrid_LSTM1D_CNN2D.png', capPt: '<strong>Figura 10 (6/8) — Hybrid_LSTM1D_CNN2D:</strong> Curva de Perda (Loss MSE) de Treino vs. Validação (±1 DP nos 5 Folds).', capEn: '<strong>Figure 10 (6/8) — Hybrid_LSTM1D_CNN2D:</strong> Training vs. Validation Reconstruction Loss Curve (MSE ±1 SD across 5 Folds).' }},
+        {{ label: '7. Hybrid_Transformer_CNN2D', src: 'assets/img/fig10_loss_Hybrid_Transformer_CNN2D.png', capPt: '<strong>Figura 10 (7/8) — Hybrid_Transformer_CNN2D:</strong> Curva de Perda (Loss MSE) de Treino vs. Validação (±1 DP nos 5 Folds).', capEn: '<strong>Figure 10 (7/8) — Hybrid_Transformer_CNN2D:</strong> Training vs. Validation Reconstruction Loss Curve (MSE ±1 SD across 5 Folds).' }},
+        {{ label: '8. Comparativo 7 Modelos', src: 'assets/img/fig10_loss_Comparativo_7_Modelos.png', capPt: '<strong>Figura 10 (8/8) — Comparativo Direto:</strong> Evolução da Loss de Validação Out-of-Fold entre todas as 7 arquiteturas.', capEn: '<strong>Figure 10 (8/8) — Direct Comparison:</strong> Out-of-Fold Validation Loss evolution across all 7 architectures.' }}
+      ]
+    }},
+    fig11: {{
+      idx: 0,
+      slides: [
+        {{ label: 'Bomba_1305', src: 'assets/img/fig11_loss_Bomba_1305.png', capPt: '<strong>Figura 11 (1/7) — Bomba_1305:</strong> Convergência da Loss de Treino e Validação nos 5 Folds.', capEn: '<strong>Figure 11 (1/7) — Bomba_1305:</strong> Training & Validation Loss Convergence across 5 Folds.' }},
+        {{ label: 'Bomba_1307', src: 'assets/img/fig11_loss_Bomba_1307.png', capPt: '<strong>Figura 11 (2/7) — Bomba_1307:</strong> Convergência da Loss de Treino e Validação nos 5 Folds.', capEn: '<strong>Figure 11 (2/7) — Bomba_1307:</strong> Training & Validation Loss Convergence across 5 Folds.' }},
+        {{ label: 'Bomba_2307', src: 'assets/img/fig11_loss_Bomba_2307.png', capPt: '<strong>Figura 11 (3/7) — Bomba_2307:</strong> Convergência da Loss de Treino e Validação nos 5 Folds.', capEn: '<strong>Figure 11 (3/7) — Bomba_2307:</strong> Training & Validation Loss Convergence across 5 Folds.' }},
+        {{ label: 'Bomba_3307', src: 'assets/img/fig11_loss_Bomba_3307.png', capPt: '<strong>Figura 11 (4/7) — Bomba_3307:</strong> Convergência da Loss de Treino e Validação nos 5 Folds.', capEn: '<strong>Figure 11 (4/7) — Bomba_3307:</strong> Training & Validation Loss Convergence across 5 Folds.' }},
+        {{ label: 'Bomba_4307', src: 'assets/img/fig11_loss_Bomba_4307.png', capPt: '<strong>Figura 11 (5/7) — Bomba_4307:</strong> Convergência da Loss de Treino e Validação nos 5 Folds.', capEn: '<strong>Figure 11 (5/7) — Bomba_4307:</strong> Training & Validation Loss Convergence across 5 Folds.' }},
+        {{ label: 'Bomba_5307', src: 'assets/img/fig11_loss_Bomba_5307.png', capPt: '<strong>Figura 11 (6/7) — Bomba_5307:</strong> Convergência da Loss de Treino e Validação nos 5 Folds.', capEn: '<strong>Figure 11 (6/7) — Bomba_5307:</strong> Training & Validation Loss Convergence across 5 Folds.' }},
+        {{ label: 'Dataset_Completo', src: 'assets/img/fig11_loss_Dataset_Completo.png', capPt: '<strong>Figura 11 (7/7) — Dataset_Completo:</strong> Convergência da Loss de Treino e Validação para as 6 bombas concatenadas.', capEn: '<strong>Figure 11 (7/7) — Dataset_Completo:</strong> Training & Validation Loss Convergence for all 6 concatenated slurry pumps.' }}
+      ]
+    }},
+    fig12: {{
+      idx: 0,
+      slides: [
+        {{ label: 'Bomba_1305', src: 'assets/img/fig12_cm_Bomba_1305.png', capPt: '<strong>Figura 12 (1/7) — Bomba_1305:</strong> Matriz de Confusão Out-of-Fold (5 Folds) em 100% do dataset anual.', capEn: '<strong>Figure 12 (1/7) — Bomba_1305:</strong> Out-of-Fold Confusion Matrix (5 Folds) on 100% of the annual dataset.' }},
+        {{ label: 'Bomba_1307', src: 'assets/img/fig12_cm_Bomba_1307.png', capPt: '<strong>Figura 12 (2/7) — Bomba_1307:</strong> Matriz de Confusão Out-of-Fold (5 Folds) em 100% do dataset anual.', capEn: '<strong>Figure 12 (2/7) — Bomba_1307:</strong> Out-of-Fold Confusion Matrix (5 Folds) on 100% of the annual dataset.' }},
+        {{ label: 'Bomba_2307', src: 'assets/img/fig12_cm_Bomba_2307.png', capPt: '<strong>Figura 12 (3/7) — Bomba_2307:</strong> Matriz de Confusão Out-of-Fold (5 Folds) em 100% do dataset anual.', capEn: '<strong>Figure 12 (3/7) — Bomba_2307:</strong> Out-of-Fold Confusion Matrix (5 Folds) on 100% of the annual dataset.' }},
+        {{ label: 'Bomba_3307', src: 'assets/img/fig12_cm_Bomba_3307.png', capPt: '<strong>Figura 12 (4/7) — Bomba_3307:</strong> Matriz de Confusão Out-of-Fold (5 Folds) em 100% do dataset anual.', capEn: '<strong>Figure 12 (4/7) — Bomba_3307:</strong> Out-of-Fold Confusion Matrix (5 Folds) on 100% of the annual dataset.' }},
+        {{ label: 'Bomba_4307', src: 'assets/img/fig12_cm_Bomba_4307.png', capPt: '<strong>Figura 12 (5/7) — Bomba_4307:</strong> Matriz de Confusão Out-of-Fold (5 Folds) em 100% do dataset anual.', capEn: '<strong>Figure 12 (5/7) — Bomba_4307:</strong> Out-of-Fold Confusion Matrix (5 Folds) on 100% of the annual dataset.' }},
+        {{ label: 'Bomba_5307', src: 'assets/img/fig12_cm_Bomba_5307.png', capPt: '<strong>Figura 12 (6/7) — Bomba_5307:</strong> Matriz de Confusão Out-of-Fold (5 Folds) em 100% do dataset anual.', capEn: '<strong>Figure 12 (6/7) — Bomba_5307:</strong> Out-of-Fold Confusion Matrix (5 Folds) on 100% of the annual dataset.' }},
+        {{ label: 'Dataset_Completo', src: 'assets/img/fig12_cm_Dataset_Completo.png', capPt: '<strong>Figura 12 (7/7) — Dataset_Completo:</strong> Matriz de Confusão Out-of-Fold (5 Folds) nas 6 bombas concatenadas.', capEn: '<strong>Figure 12 (7/7) — Dataset_Completo:</strong> Out-of-Fold Confusion Matrix (5 Folds) across all 6 concatenated pumps.' }}
+      ]
+    }},
+    fig13: {{
+      idx: 0,
+      slides: [
+        {{ label: '13A: ROC-AUC por Janela', src: 'assets/img/fig13a_janela_roc_auc.png', capPt: '<strong>Figura 13A (1/4):</strong> Comparação de ROC-AUC das 7 arquiteturas nas escalas de 15min, 30min, 1h e 2h.', capEn: '<strong>Figure 13A (1/4):</strong> ROC-AUC comparison across the 7 architectures for 15min, 30min, 1h, and 2h windows.' }},
+        {{ label: '13B: PR-AUC por Janela', src: 'assets/img/fig13b_janela_pr_auc.png', capPt: '<strong>Figura 13B (2/4):</strong> Comparação de PR-AUC das 7 arquiteturas nas escalas de 15min, 30min, 1h e 2h.', capEn: '<strong>Figure 13B (2/4):</strong> PR-AUC comparison across the 7 architectures for 15min, 30min, 1h, and 2h windows.' }},
+        {{ label: '13C: F1-Score por Janela', src: 'assets/img/fig13c_janela_f1_score.png', capPt: '<strong>Figura 13C (3/4):</strong> Comparação de F1-Score das 7 arquiteturas nas escalas de 15min, 30min, 1h e 2h.', capEn: '<strong>Figure 13C (3/4):</strong> F1-Score comparison across the 7 architectures for 15min, 30min, 1h, and 2h windows.' }},
+        {{ label: '13D: Falsos Alarmes (%)', src: 'assets/img/fig13d_janela_falsos_alarmes.png', capPt: '<strong>Figura 13D (4/4):</strong> Taxa de Falsos Alarmes (%) das 7 arquiteturas nas escalas de 15min, 30min, 1h e 2h.', capEn: '<strong>Figure 13D (4/4):</strong> False Alarm Rate (%) across the 7 architectures for 15min, 30min, 1h, and 2h windows.' }}
+      ]
+    }},
+    fig14: {{
+      idx: 0,
+      slides: [
+        {{ label: '14A: ROC-AUC & PR-AUC', src: 'assets/img/fig14a_rotulos_roc_pr.png', capPt: '<strong>Figura 14A (1/4):</strong> ROC-AUC e PR-AUC nas 11 Formulações de Rótulos (Instantâneo, Futuro, Alerta Precoce e Kernel Gaussiano).', capEn: '<strong>Figure 14A (1/4):</strong> ROC-AUC and PR-AUC across the 11 Label Formulations (Instantaneous, Future, Early Warning, and Gaussian Kernel).' }},
+        {{ label: '14B: F1, Precisão & Recall', src: 'assets/img/fig14b_rotulos_f1_prec_rec.png', capPt: '<strong>Figura 14B (2/4):</strong> F1-Score, Precisão e Recall nas 11 Formulações de Rótulos.', capEn: '<strong>Figure 14B (2/4):</strong> F1-Score, Precision, and Recall across the 11 Label Formulations.' }},
+        {{ label: '14C: Correlação de Spearman', src: 'assets/img/fig14c_rotulos_spearman.png', capPt: '<strong>Figura 14C (3/4):</strong> Correlação de Spearman (ρ) entre a probabilidade predita pelo modelo e a evolução real do risco.', capEn: '<strong>Figure 14C (3/4):</strong> Spearman Rank Correlation (ρ) between predicted probability and true risk evolution.' }},
+        {{ label: '14D: Falsos Alarmes & MAE (%)', src: 'assets/img/fig14d_rotulos_far_mae.png', capPt: '<strong>Figura 14D (4/4):</strong> Taxa de Falsos Alarmes (%) e Erro Médio Absoluto da Probabilidade (%) nas 11 Formulações.', capEn: '<strong>Figure 14D (4/4):</strong> False Alarm Rate (%) and Probability Mean Absolute Error (%) across the 11 Formulations.' }}
+      ]
+    }},
+    fig15: {{
+      idx: 0,
+      slides: [
+        {{ label: 'Bomba_1305', src: 'assets/img/fig15_hist_Bomba_1305.png', capPt: '<strong>Figura 15 (1/7) — Bomba_1305:</strong> Histograma do Erro de Reconstrução mostrando Zona Verde (Normal Automático), Zona Amarela (Revisão do Operador: 15,8% das janelas, capturando 73,2% dos FP+FN) e Zona Vermelha (Anomalia Automática). F1 salta de 0.8697 para 0.9647.', capEn: '<strong>Figure 15 (1/7) — Bomba_1305:</strong> Reconstruction Error Histogram showing Green Zone (Auto Normal), Yellow Zone (Operator Review: 15.8% of windows, capturing 73.2% of FP+FN), and Red Zone (Auto Anomaly). F1 jumps from 0.8697 to 0.9647.' }},
+        {{ label: 'Bomba_1307', src: 'assets/img/fig15_hist_Bomba_1307.png', capPt: '<strong>Figura 15 (2/7) — Bomba_1307:</strong> Histograma do Erro de Reconstrução (AE_Transformer1D). Zona do Operador: 14,0% das janelas, capturando 79,5% dos FP+FN. F1 salta de 0.9524 para 0.9901.', capEn: '<strong>Figure 15 (2/7) — Bomba_1307:</strong> Reconstruction Error Histogram (AE_Transformer1D). Operator Zone: 14.0% of windows, capturing 79.5% of FP+FN. F1 jumps from 0.9524 to 0.9901.' }},
+        {{ label: 'Bomba_2307', src: 'assets/img/fig15_hist_Bomba_2307.png', capPt: '<strong>Figura 15 (3/7) — Bomba_2307:</strong> Histograma do Erro de Reconstrução (AE_Transformer1D). Zona do Operador: 13,5% das janelas, capturando 79,0% dos FP+FN. F1 salta de 0.9517 para 0.9898.', capEn: '<strong>Figure 15 (3/7) — Bomba_2307:</strong> Reconstruction Error Histogram (AE_Transformer1D). Operator Zone: 13.5% of windows, capturing 79.0% of FP+FN. F1 jumps from 0.9517 to 0.9898.' }},
+        {{ label: 'Bomba_3307', src: 'assets/img/fig15_hist_Bomba_3307.png', capPt: '<strong>Figura 15 (4/7) — Bomba_3307:</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: apenas 9,3% das janelas, capturando 68,0% dos FP+FN. F1 salta de 0.9588 para 0.9868.', capEn: '<strong>Figure 15 (4/7) — Bomba_3307:</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: only 9.3% of windows, capturing 68.0% of FP+FN. F1 jumps from 0.9588 to 0.9868.' }},
+        {{ label: 'Bomba_4307', src: 'assets/img/fig15_hist_Bomba_4307.png', capPt: '<strong>Figura 15 (5/7) — Bomba_4307:</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: 17,3% das janelas, capturando 78,7% dos FP+FN. F1 salta de 0.9217 para 0.9831.', capEn: '<strong>Figure 15 (5/7) — Bomba_4307:</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: 17.3% of windows, capturing 78.7% of FP+FN. F1 jumps from 0.9217 to 0.9831.' }},
+        {{ label: 'Bomba_5307', src: 'assets/img/fig15_hist_Bomba_5307.png', capPt: '<strong>Figura 15 (6/7) — Bomba_5307:</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: 13,9% das janelas, capturando 74,2% dos FP+FN. F1 salta de 0.8912 para 0.9719.', capEn: '<strong>Figure 15 (6/7) — Bomba_5307:</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: 13.9% of windows, capturing 74.2% of FP+FN. F1 jumps from 0.8912 to 0.9719.' }},
+        {{ label: 'Dataset_Completo', src: 'assets/img/fig15_hist_Dataset_Completo.png', capPt: '<strong>Figura 15 (7/7) — Dataset_Completo (6 Bombas Concatenadas):</strong> Histograma do Erro de Reconstrução (AE_LSTM1D). Zona do Operador: 18,8% das janelas, capturando 75,5% dos FP+FN. F1 salta de 0.9204 para 0.9804.', capEn: '<strong>Figure 15 (7/7) — Dataset_Completo (All 6 Pumps Concatenated):</strong> Reconstruction Error Histogram (AE_LSTM1D). Operator Zone: 18.8% of windows, capturing 75.5% of FP+FN. F1 jumps from 0.9204 to 0.9804.' }}
+      ]
+    }},
+    fig16: {{
+      idx: 0,
+      slides: [
+        {{ label: '16A: Ganho de F1-Score / F1 Gain', src: 'assets/img/fig16a_ganho_f1_operador.png', capPt: '<strong>Figura 16A (1/2) — Ganho de F1-Score por Arquitetura:</strong> Comparação direta entre Limiar Único no Histograma (cinza), Só Decisões Automáticas nas Zonas 1 e 3 (azul) e Sistema Final com Revisão do Operador na Zona 2 (verde).', capEn: '<strong>Figure 16A (1/2) — F1-Score Gain by Architecture:</strong> Direct comparison between Single Histogram Threshold (grey), Auto-Only Decisions in Zones 1 & 3 (blue), and Final System with Operator Review in Zone 2 (green).' }},
+        {{ label: '16B: Captura de FP+FN vs. Esforço / Error Capture vs. Effort', src: 'assets/img/fig16b_captura_fp_fn_operador.png', capPt: '<strong>Figura 16B (2/2) — Eficiência da Triagem do Operador:</strong> Porcentagem de erros (FP+FN) capturados na Zona Intermediária (~74,7% no AE_LSTM1D) versus porcentagem total de janelas enviadas para revisão humana (~14,9%).', capEn: '<strong>Figure 16B (2/2) — Operator Triage Efficiency:</strong> Percentage of total errors (FP+FN) captured inside the Intermediate Zone (~74.7% for AE_LSTM1D) versus percentage of windows routed for human review (~14.9%).' }}
+      ]
+    }}
+  }};
 
-  const FIG16_SLIDES = [
-    {{ label: '16A: Ganho de F1-Score / F1 Gain', src: 'assets/img/fig16a_ganho_f1_operador.png', capPt: '<strong>Figura 16A (1/2) — Ganho de F1-Score por Arquitetura:</strong> Comparação direta entre Limiar Único no Histograma (cinza), Só Decisões Automáticas nas Zonas 1 e 3 (azul) e Sistema Final com Revisão do Operador na Zona 2 (verde).', capEn: '<strong>Figure 16A (1/2) — F1-Score Gain by Architecture:</strong> Direct comparison between Single Histogram Threshold (grey), Auto-Only Decisions in Zones 1 & 3 (blue), and Final System with Operator Review in Zone 2 (green).' }},
-    {{ label: '16B: Captura de FP+FN vs. Esforço / Error Capture vs. Effort', src: 'assets/img/fig16b_captura_fp_fn_operador.png', capPt: '<strong>Figura 16B (2/2) — Eficiência da Triagem do Operador:</strong> Porcentagem de erros (FP+FN) capturados na Zona Intermediária (~74,7% no AE_LSTM1D) versus porcentagem total de janelas enviadas para revisão humana (~14,9%).', capEn: '<strong>Figure 16B (2/2) — Operator Triage Efficiency:</strong> Percentage of total errors (FP+FN) captured inside the Intermediate Zone (~74.7% for AE_LSTM1D) versus percentage of windows routed for human review (~14.9%).' }}
-  ];
-  let idxFig16 = 0;
-
-  function renderFig15() {{
-    const s = FIG15_SLIDES[idxFig15];
-    document.getElementById('fig15Img').src = s.src;
-    document.getElementById('fig15Counter').textContent = (idxFig15 + 1) + ' / ' + FIG15_SLIDES.length;
-    document.getElementById('fig15Cap').innerHTML = `<span data-lang="pt">${{s.capPt}}</span><span data-lang="en">${{s.capEn}}</span>`;
-    const tabs = document.getElementById('fig15Tabs');
-    tabs.innerHTML = FIG15_SLIDES.map((item, i) =>
-      `<button type="button" class="v-tab ${{i === idxFig15 ? 'active' : ''}}" onclick="setFig15(${{i}})">${{item.label}}</button>`
+  function renderViewer(key) {{
+    const v = VIEWERS[key];
+    const s = v.slides[v.idx];
+    document.getElementById(key + 'Img').src = s.src;
+    document.getElementById(key + 'Counter').textContent = (v.idx + 1) + ' / ' + v.slides.length;
+    document.getElementById(key + 'Cap').innerHTML = `<span data-lang="pt">${{s.capPt}}</span><span data-lang="en">${{s.capEn}}</span>`;
+    const tabs = document.getElementById(key + 'Tabs');
+    tabs.innerHTML = v.slides.map((item, i) =>
+      `<button type="button" class="v-tab ${{i === v.idx ? 'active' : ''}}" onclick="setViewer('${{key}}', ${{i}})">${{item.label}}</button>`
     ).join('');
   }}
-  function setFig15(i) {{ idxFig15 = i; renderFig15(); }}
-  function stepFig15(delta) {{ idxFig15 = (idxFig15 + delta + FIG15_SLIDES.length) % FIG15_SLIDES.length; renderFig15(); }}
-
-  function renderFig16() {{
-    const s = FIG16_SLIDES[idxFig16];
-    document.getElementById('fig16Img').src = s.src;
-    document.getElementById('fig16Counter').textContent = (idxFig16 + 1) + ' / ' + FIG16_SLIDES.length;
-    document.getElementById('fig16Cap').innerHTML = `<span data-lang="pt">${{s.capPt}}</span><span data-lang="en">${{s.capEn}}</span>`;
-    const tabs = document.getElementById('fig16Tabs');
-    tabs.innerHTML = FIG16_SLIDES.map((item, i) =>
-      `<button type="button" class="v-tab ${{i === idxFig16 ? 'active' : ''}}" onclick="setFig16(${{i}})">${{item.label}}</button>`
-    ).join('');
+  function setViewer(key, i) {{ VIEWERS[key].idx = i; renderViewer(key); }}
+  function stepViewer(key, delta) {{
+    const v = VIEWERS[key];
+    v.idx = (v.idx + delta + v.slides.length) % v.slides.length;
+    renderViewer(key);
   }}
-  function setFig16(i) {{ idxFig16 = i; renderFig16(); }}
-  function stepFig16(delta) {{ idxFig16 = (idxFig16 + delta + FIG16_SLIDES.length) % FIG16_SLIDES.length; renderFig16(); }}
+  function stepFig15(d) {{ stepViewer('fig15', d); }}
+  function stepFig16(d) {{ stepViewer('fig16', d); }}
 
   window.addEventListener('DOMContentLoaded', () => {{
-    renderFig15();
-    renderFig16();
+    Object.keys(VIEWERS).forEach(k => renderViewer(k));
     try {{
       const savedLang = localStorage.getItem('site_lang_pref');
       if (savedLang === 'en' || savedLang === 'pt') {{
