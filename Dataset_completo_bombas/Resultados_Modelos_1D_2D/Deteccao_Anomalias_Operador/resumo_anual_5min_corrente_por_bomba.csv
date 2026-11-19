@@ -1,0 +1,7 @@
+Bomba,Nome_Bomba,Total_Blocos_5min_No_Ano,Pontos_Edcarlos_(4_dias_Abril),"Pontos_Ano_Completo_Calculados_[4,8]",Pontos_Ano_Completo_Integrado_(Edcarlos+Calculado),Taxa_Ocorrencia_Anual_pct,"Minimo_StdDev_[4,8]","Media_StdDev_[4,8]","Maximo_StdDev_[4,8]",Pontos_Acima_de_8_(Transientes_Partida/Parada)
+BP 1305,1305,85825,0,132,130,0.154,4.0149,4.961,7.9877,274
+BP 1307,1307,85825,22,2559,2580,2.982,4.0007,4.6169,7.9589,293
+BP 2307,2307,85825,507,1682,2188,1.96,4.0,4.4758,7.927,380
+BP 3307,3307,85825,795,13216,13420,15.399,4.0,5.1731,7.9946,498
+BP 4307,4307,85825,13,105,117,0.122,4.0063,4.8755,7.9444,286
+BP 5307,5307,85825,3,67,70,0.078,4.003,4.684,7.8744,378

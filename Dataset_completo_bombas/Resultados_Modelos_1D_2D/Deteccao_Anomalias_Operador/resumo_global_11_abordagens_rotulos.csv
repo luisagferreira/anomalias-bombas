@@ -1,0 +1,12 @@
+approach_id,approach_label,mode,roc_auc_mean,pr_auc_mean,accuracy_mean,best_f1_mean,precision_mean,recall_mean,false_alarm_rate_pct_mean,prob_mae_pct_mean,spearman_corr_mean,roc_auc_on_operator_actual_mean,early_warning_30m_recall_at_5pct_far_mean
+1_Atual_Binario,1. Atual Binário (0/1),binary_all,0.983206,0.915541,0.962353,0.858441,0.863204,0.854531,3.462041,7.635102,0.604086,0.983206,34.583469
+2_Futuro_Geral_15min,2. Previsão Geral Futuro (H=15min),binary_all,0.902267,0.705494,0.922006,0.680282,0.683433,0.680806,6.627143,21.076327,0.524486,0.964153,34.722041
+3_Futuro_Geral_30min,3. Previsão Geral Futuro (H=30min),binary_all,0.885884,0.719512,0.896302,0.689439,0.694780,0.697788,9.196735,23.022857,0.537402,0.959584,34.078776
+4_Futuro_Geral_60min,4. Previsão Geral Futuro (H=60min),binary_all,0.869467,0.736845,0.865822,0.695420,0.707304,0.699198,12.580612,25.278980,0.543957,0.959096,35.628163
+5_Alerta_Precoce_15min,5. Alerta Precoce Puro (H=15min | Atual=0),early_only,0.799427,0.287924,0.895955,0.349492,0.298076,0.435737,7.927551,32.442653,0.251633,0.952190,35.017959
+6_Alerta_Precoce_30min,6. Alerta Precoce Puro (H=30min | Atual=0),early_only,0.785104,0.371724,0.855033,0.412782,0.365747,0.490420,11.385306,34.394898,0.301447,0.954818,34.408367
+7_Alerta_Precoce_60min,7. Alerta Precoce Puro (H=60min | Atual=0),early_only,0.775837,0.463729,0.796251,0.476769,0.428120,0.568278,17.741224,35.890816,0.353337,0.951245,35.152449
+8_Pct_IntraJanela_Pura,8. % Duração Intra-Janela (τ=0),soft_prob,0.990763,0.855927,0.968835,0.804618,0.786392,0.828641,3.009796,4.799592,0.623608,0.983243,35.587347
+9_Dist_Prob_Curta_15m_7m,"9. Dist. Prob. Curta (τ_ant=15m, τ_dep=7.5m)",soft_prob,0.925241,0.839449,0.925584,0.787698,0.827237,0.754108,5.853061,14.688571,0.652996,0.979408,36.277347
+10_Dist_Prob_Media_30m_15m,"10. Dist. Prob. Média (τ_ant=30m, τ_dep=15m)",soft_prob,0.899208,0.818502,0.898206,0.760376,0.801194,0.726147,7.987347,17.139184,0.652024,0.977069,35.874490
+11_Dist_Prob_Longa_60m_30m,"11. Dist. Prob. Longa (τ_ant=60m, τ_dep=30m)",soft_prob,0.873182,0.810429,0.850824,0.742812,0.771259,0.729347,13.714694,19.902449,0.648733,0.974282,35.263469

@@ -1,0 +1,28 @@
+# Arquivos binarios pesados do dataset (nao versionar no GitHub)
+*.npz
+*.npy
+*.parquet
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.onnx
+*.zip
+*.tar.gz
+*.tmp.*
+_temp_*
+
+# Pastas de dados brutos e folds pesados
+Dataset_completo_bombas/Folds_Stratified_CV/
+Dataset_completo_bombas/Bombas_por_ID/
+Dataset_completo_bombas/Bombas_Separadas_Subpastas/
+Dataset_completo_bombas/Graficos_Bombas/
+Dataset_completo_bombas/Imputacao_Hibrida/
+Dataset_completo_bombas/*.csv
+
+# Cache Python e ambientes virtuais
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
