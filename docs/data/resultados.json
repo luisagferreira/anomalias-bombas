@@ -1,5 +1,5 @@
 {
-  "updated_at": "20/11/2026 10:18",
+  "updated_at": "20/11/2026 11:56",
   "ranking_7_arquiteturas": [
     {
       "architecture": "AE_LSTM1D",
@@ -6941,6 +6941,13 @@
     "fig14b_rotulos_f1_prec_rec.png",
     "fig14c_rotulos_spearman.png",
     "fig14d_rotulos_far_mae.png",
+    "fig15_boxcox_Bomba_1305.png",
+    "fig15_boxcox_Bomba_1307.png",
+    "fig15_boxcox_Bomba_2307.png",
+    "fig15_boxcox_Bomba_3307.png",
+    "fig15_boxcox_Bomba_4307.png",
+    "fig15_boxcox_Bomba_5307.png",
+    "fig15_boxcox_Dataset_Completo.png",
     "fig15_hist_Bomba_1305.png",
     "fig15_hist_Bomba_1307.png",
     "fig15_hist_Bomba_2307.png",
@@ -6960,6 +6967,7 @@
     "matrizes_confusao_ano_completo_15min.png",
     "matrizes_confusao_arquiteturas_global.png",
     "matrizes_confusao_bombas_15min.png",
+    "painel_fig15_boxcox.png",
     "pipeline_completo_deteccao_anomalias.png",
     "timeline_deteccao_operador_bombas.png"
   ]
