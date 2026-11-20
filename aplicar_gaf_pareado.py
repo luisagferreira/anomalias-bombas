@@ -1,7 +1,17 @@
 """
-Script para aplicação do Gramian Angular Field (GASF e GADF) pareado com as séries
-temporais 1D originais para todas as 6 bombas separadamente e para o Dataset Completo,
-nas janelas de 15min, 30min, 1h e 2h.
+Script para aplicação do Gramian Angular Difference Field (somente GADF) pareado com as
+séries temporais 1D originais para todas as 6 bombas separadamente, nas janelas de
+15min, 30min, 1h e 2h.
+
+Correções aplicadas para redução de volume e memória:
+1. Removido completamente o cálculo e o salvamento de `X_gasf` (mantendo somente GADF).
+2. Substituído `np.savez` (sem compressão) por `np.savez_compressed` (compressão ZIP).
+3. Salvo `X_paa` (N, Canais, M) em float16 (junto aos scalers por fold) para permitir
+   futuro cálculo on-the-fly na GPU sem vazamento entre folds.
+4. Adicionadas flags de CLI:
+   - `--force`       : regrava os `.npz` mesmo que já existam em disco.
+   - `--on-the-fly`  : salva apenas `X_1d` + `X_paa` + scalers (sem pré-materializar `X_gadf`,
+                       reduzindo o volume total de ~3,1 GB para ~0,55 GB).
 
 Características:
 - Redução espacial via PAA (Piecewise Aggregate Approximation) exata para M = 32 (32x32).
@@ -9,7 +19,7 @@ Características:
   (evitando vazamento de dados e preservando a escala física entre bomba ligada/desligada).
 - Pareamento garantido por índice de janela (0..N-1) dentro de cada arquivo .npz:
     * X_1d   : shape (N, Canais, L)      em float32 (série temporal 1D original)
-    * X_gasf : shape (N, Canais, 32, 32) em float16 (Gramian Angular Summation Field)
+    * X_paa  : shape (N, Canais, 32)     em float16 (série reduzida via PAA)
     * X_gadf : shape (N, Canais, 32, 32) em float16 (Gramian Angular Difference Field)
     * fold, stratum, window_id, start_idx, end_idx, block_id, yload_mean, is_boundary_overlap
 - Geração de figuras .png demonstrativas em Dataset_completo_bombas/Folds_Stratified_CV/Figuras_GAF/
@@ -18,8 +28,8 @@ Características:
 import os
 import gc
 import time
-import glob
 import zipfile
+import argparse
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -53,14 +63,17 @@ PUMPS_MAP = {
 }
 
 
-def has_complete_gaf_npz(npz_path: str) -> bool:
-    """Verifica rapidamente via cabeçalho ZIP se o .npz já contém GADF e scalers."""
+def has_complete_gaf_npz(npz_path: str, require_gadf: bool = True) -> bool:
+    """Verifica rapidamente via cabeçalho ZIP se o .npz já contém GADF (sem GASF) e scalers."""
     if not os.path.isfile(npz_path):
         return False
     try:
         with zipfile.ZipFile(npz_path, "r") as zf:
             names = set(zf.namelist())
-        return {"X_1d.npy", "X_gadf.npy", "scaler_min_per_fold.npy", "scaler_max_per_fold.npy"}.issubset(names)
+        required = {"X_1d.npy", "scaler_min_per_fold.npy", "scaler_max_per_fold.npy"}
+        if require_gadf:
+            required.add("X_gadf.npy")
+        return required.issubset(names) and ("X_gasf.npy" not in names)
     except Exception:
         return False
 
@@ -92,13 +105,14 @@ def compute_global_fold_normalized_paa(
     folds: np.ndarray,
     clean_mask: np.ndarray,
     output_size: int = 32,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     1. Aplica PAA reduzindo (N, C, L) -> (N, C, M).
     2. Normaliza cada canal globalmente para [-1, 1] usando o min e max calculados
        apenas nos folds de treino (fold != k) para cada fold de validação k.
     Retorna:
-       X_norm : (N, C, M) em [-1, 1] (float32)
+       X_paa      : (N, C, M) bruto em float32 (para normalização exata por fold on-the-fly)
+       X_norm     : (N, C, M) normalizado em [-1, 1] (float32)
        scaler_min : (5, C) min por fold e canal
        scaler_max : (5, C) max por fold e canal
     """
@@ -129,24 +143,22 @@ def compute_global_fold_normalized_paa(
         scaled = 2.0 * (X_paa[val_mask] - c_min[None, :, None]) / denom[None, :, None] - 1.0
         X_norm[val_mask] = np.clip(scaled, -1.0, 1.0)
 
-    return X_norm, scaler_min, scaler_max
+    return X_paa, X_norm, scaler_min, scaler_max
 
 
-def compute_gasf_gadf_batch(
+def compute_gadf_batch(
     X_norm: np.ndarray,
     batch_size: int = 8192,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> np.ndarray:
     """
-    Calcula GASF e GADF vetorizados em lotes para economizar RAM, retornando
-    tensores (N, C, M, M) em float16.
+    Calcula SOMENTE o GADF vetorizado em lotes para economizar RAM e disco, retornando
+    tensor (N, C, M, M) em float16.
     Para x em [-1, 1] e phi = arccos(x) em [0, pi]:
       cos(phi) = x
       sin(phi) = sqrt(1 - x^2)
-      GASF[u, v] = cos(phi_u + phi_v) = x_u * x_v - sin(phi_u) * sin(phi_v)
       GADF[u, v] = sin(phi_u - phi_v) = sin(phi_u) * x_v - x_u * sin(phi_v)
     """
     N, C, M = X_norm.shape
-    X_gasf = np.empty((N, C, M, M), dtype=np.float16)
     X_gadf = np.empty((N, C, M, M), dtype=np.float16)
 
     for start in range(0, N, batch_size):
@@ -155,41 +167,41 @@ def compute_gasf_gadf_batch(
         s = np.sqrt(np.clip(1.0 - x * x, 0.0, 1.0))  # sin(phi) >= 0
 
         # Produto externo no último eixo: (B, C, M, 1) * (B, C, 1, M) -> (B, C, M, M)
-        xx = x[:, :, :, None] * x[:, :, None, :]
-        ss = s[:, :, :, None] * s[:, :, None, :]
         sx = s[:, :, :, None] * x[:, :, None, :]
         xs = x[:, :, :, None] * s[:, :, None, :]
-
-        X_gasf[start:end] = (xx - ss).astype(np.float16)
         X_gadf[start:end] = (sx - xs).astype(np.float16)
 
-    return X_gasf, X_gadf
+    return X_gadf
 
 
-def plot_pump_gaf_showcase(
+def compute_single_gadf(x_norm_1d: np.ndarray) -> np.ndarray:
+    """Calcula a matriz GADF (M, M) para um único vetor 1D normalizado em [-1, 1]."""
+    s = np.sqrt(np.clip(1.0 - x_norm_1d * x_norm_1d, 0.0, 1.0))
+    return (s[:, None] * x_norm_1d[None, :] - x_norm_1d[:, None] * s[None, :]).astype(np.float32)
+
+
+def plot_pump_gadf_showcase(
     dataset_name: str,
     win_label: str,
     X_1d: np.ndarray,
     X_norm: np.ndarray,
-    X_gasf: np.ndarray,
-    X_gadf: np.ndarray,
     feature_cols: list[str],
     strata: np.ndarray,
     folds: np.ndarray,
     timestamps_start: np.ndarray,
     win_idx: int,
     out_path: str,
+    X_gadf: np.ndarray | None = None,
 ):
     """
     Gera uma figura detalhada mostrando para uma janela representativa os 4 sensores
-    da bomba: Série 1D original, Série PAA normalizada em [-1, 1], matriz GASF (32x32)
-    e matriz GADF (32x32).
+    da bomba: Série 1D original, Série PAA normalizada em [-1, 1] e matriz GADF (32x32).
     """
     n_channels = min(4, len(feature_cols))
     L = X_1d.shape[2]
     M = X_norm.shape[2]
 
-    fig, axes = plt.subplots(n_channels, 4, figsize=(16, 3.2 * n_channels), constrained_layout=True)
+    fig, axes = plt.subplots(n_channels, 3, figsize=(13, 3.2 * n_channels), constrained_layout=True)
     if n_channels == 1:
         axes = np.expand_dims(axes, axis=0)
 
@@ -224,29 +236,22 @@ def plot_pump_gaf_showcase(
         ax1.set_ylabel("Escala [-1, 1]")
         ax1.grid(True, alpha=0.3)
 
-        # Coluna 2: GASF (32x32)
+        # Coluna 2: GADF (32x32)
         ax2 = axes[c, 2]
-        im_gasf = ax2.imshow(
-            X_gasf[win_idx, c].astype(np.float32),
-            cmap="rainbow",
-            origin="lower",
-            vmin=-1.0,
-            vmax=1.0,
+        gadf_mat = (
+            X_gadf[win_idx, c].astype(np.float32)
+            if X_gadf is not None
+            else compute_single_gadf(X_norm[win_idx, c])
         )
-        ax2.set_title(f"GASF 32x32\n({ch_name})", fontsize=10)
-        fig.colorbar(im_gasf, ax=ax2, fraction=0.046, pad=0.04)
-
-        # Coluna 3: GADF (32x32)
-        ax3 = axes[c, 3]
-        im_gadf = ax3.imshow(
-            X_gadf[win_idx, c].astype(np.float32),
+        im_gadf = ax2.imshow(
+            gadf_mat,
             cmap="coolwarm",
             origin="lower",
             vmin=-1.0,
             vmax=1.0,
         )
-        ax3.set_title(f"GADF 32x32\n({ch_name})", fontsize=10)
-        fig.colorbar(im_gadf, ax=ax3, fraction=0.046, pad=0.04)
+        ax2.set_title(f"GADF 32x32\n({ch_name})", fontsize=10)
+        fig.colorbar(im_gadf, ax=ax2, fraction=0.046, pad=0.04)
 
     plt.savefig(out_path, dpi=140)
     plt.close(fig)
@@ -259,18 +264,17 @@ def plot_multi_window_comparison(
 ):
     """
     Gera figura comparando as 4 escalas temporais (15min, 30min, 1h, 2h) para a variável
-    BR_YLOAD* (Carga) da bomba: Série 1D + GASF + GADF.
+    BR_YLOAD* (Carga) da bomba: Série 1D + GADF.
     """
-    fig, axes = plt.subplots(4, 3, figsize=(13, 12), constrained_layout=True)
+    fig, axes = plt.subplots(4, 2, figsize=(10.5, 12), constrained_layout=True)
     fig.suptitle(
-        f"Comparação Multiescala GAF (15min, 30min, 1h, 2h) - {pump_name} (Sensor Carga: BR_YLOAD)",
+        f"Comparação Multiescala GADF (15min, 30min, 1h, 2h) - {pump_name} (Sensor Carga: BR_YLOAD)",
         fontsize=13,
         fontweight="bold",
     )
 
     for row_idx, (win_label, sample) in enumerate(win_samples.items()):
         x_1d = sample["x_1d"]
-        gasf = sample["gasf"]
         gadf = sample["gadf"]
         L = len(x_1d)
 
@@ -282,14 +286,9 @@ def plot_multi_window_comparison(
         ax0.grid(True, alpha=0.3)
 
         ax1 = axes[row_idx, 1]
-        im1 = ax1.imshow(gasf, cmap="rainbow", origin="lower", vmin=-1.0, vmax=1.0)
-        ax1.set_title(f"GASF 32x32 ({win_label})", fontsize=10)
+        im1 = ax1.imshow(gadf, cmap="coolwarm", origin="lower", vmin=-1.0, vmax=1.0)
+        ax1.set_title(f"GADF 32x32 ({win_label})", fontsize=10)
         fig.colorbar(im1, ax=ax1, fraction=0.046, pad=0.04)
-
-        ax2 = axes[row_idx, 2]
-        im2 = ax2.imshow(gadf, cmap="coolwarm", origin="lower", vmin=-1.0, vmax=1.0)
-        ax2.set_title(f"GADF 32x32 ({win_label})", fontsize=10)
-        fig.colorbar(im2, ax=ax2, fraction=0.046, pad=0.04)
 
     plt.savefig(out_path, dpi=140)
     plt.close(fig)
@@ -300,9 +299,10 @@ def process_dataset_gaf(
     timestamps: np.ndarray,
     data_matrix: np.ndarray,
     feature_cols: list[str],
+    force: bool = False,
+    on_the_fly: bool = False,
 ):
     dataset_out_dir = os.path.join(OUTPUT_DIR, dataset_name)
-    n_samples = data_matrix.shape[0]
     win_samples_for_plot = {}
 
     for win_label, cfg in WINDOWS_CONFIG.items():
@@ -316,14 +316,14 @@ def process_dataset_gaf(
         dynamic_idx = int(np.argmax(df_meta["yload_std"].to_numpy()))
         yload_ch = 2 if dataset_name != "Dataset_Completo" else 12
 
-        if has_complete_gaf_npz(npz_path):
+        if (not force) and has_complete_gaf_npz(npz_path, require_gadf=(not on_the_fly)):
             n_w = len(df_meta)
             n_c = len(feature_cols)
+            sz_mb = os.path.getsize(npz_path) / 1e6
             print(
                 f"[JÁ GERADO] {dataset_name:16s} | {win_label:5s} | "
-                f"X_1d: ({n_w}, {n_c}, {win_size}) | GASF/GADF: ({n_w}, {n_c}, 32, 32)"
+                f"X_1d: ({n_w}, {n_c}, {win_size}) | GADF: ({n_w}, {n_c}, 32, 32) | {sz_mb:.1f} MB"
             )
-            # Carrega apenas a amostra dynamic_idx para o gráfico multiescala
             start_i = int(df_meta["start_idx"].iloc[dynamic_idx])
             x_1d_sample = data_matrix[start_i : start_i + win_size, yload_ch].copy()
             W_paa = build_paa_weight_matrix(win_size, GAF_SIZE)
@@ -331,11 +331,9 @@ def process_dataset_gaf(
             c_min = float(data_matrix[:, yload_ch].min())
             c_max = float(data_matrix[:, yload_ch].max())
             x_n = np.clip(2.0 * (x_paa_s - c_min) / max(c_max - c_min, 1e-8) - 1.0, -1.0, 1.0)
-            s_n = np.sqrt(np.clip(1.0 - x_n * x_n, 0.0, 1.0))
             win_samples_for_plot[win_label] = {
                 "x_1d": x_1d_sample,
-                "gasf": (x_n[:, None] * x_n[None, :] - s_n[:, None] * s_n[None, :]).astype(np.float32),
-                "gadf": (s_n[:, None] * x_n[None, :] - x_n[:, None] * s_n[None, :]).astype(np.float32),
+                "gadf": compute_single_gadf(x_n),
             }
             continue
 
@@ -354,24 +352,22 @@ def process_dataset_gaf(
         X_1d = np.ascontiguousarray(all_windows_view[::stride], dtype=np.float32)
 
         # Redução PAA (L -> 32) + Normalização Global por sensor nos folds de treino
-        X_norm, scaler_min, scaler_max = compute_global_fold_normalized_paa(
+        X_paa, X_norm, scaler_min, scaler_max = compute_global_fold_normalized_paa(
             X_1d=X_1d,
             folds=folds,
             clean_mask=clean_mask,
             output_size=GAF_SIZE,
         )
 
-        # Cálculo vetorizado de GASF e GADF (N, C, 32, 32) em float16
-        X_gasf, X_gadf = compute_gasf_gadf_batch(X_norm, batch_size=512)
+        # Calcula SOMENTE GADF (sem GASF) quando não estiver no modo --on-the-fly
+        X_gadf = None if on_the_fly else compute_gadf_batch(X_norm, batch_size=2048)
 
         if os.path.exists(npz_path):
             os.remove(npz_path)
 
-        np.savez(
-            npz_path,
+        save_payload = dict(
             X_1d=X_1d,
-            X_gasf=X_gasf,
-            X_gadf=X_gadf,
+            X_paa=X_paa.astype(np.float16),
             fold=folds,
             stratum=strata,
             window_id=window_ids,
@@ -384,37 +380,47 @@ def process_dataset_gaf(
             scaler_min_per_fold=scaler_min,
             scaler_max_per_fold=scaler_max,
         )
+        if X_gadf is not None:
+            save_payload["X_gadf"] = X_gadf
+
+        # Compressão ZIP nativa (reduz ~50% em X_gadf e ~76% em X_1d)
+        np.savez_compressed(npz_path, **save_payload)
 
         if win_label == "15min" or (dataset_name == "Bomba_1305" and win_label == "1h"):
             fig_path = os.path.join(FIGURES_DIR, f"gaf_canais_{dataset_name}_{win_label}.png")
-            plot_pump_gaf_showcase(
+            plot_pump_gadf_showcase(
                 dataset_name=dataset_name,
                 win_label=win_label,
                 X_1d=X_1d,
                 X_norm=X_norm,
-                X_gasf=X_gasf,
-                X_gadf=X_gadf,
                 feature_cols=feature_cols,
                 strata=strata,
                 folds=folds,
                 timestamps_start=timestamps[start_indices],
                 win_idx=dynamic_idx,
                 out_path=fig_path,
+                X_gadf=X_gadf,
             )
 
         # Guarda amostra do canal YLOAD para a figura multiescala (15m, 30m, 1h, 2h)
+        gadf_dyn = (
+            X_gadf[dynamic_idx, yload_ch].astype(np.float32)
+            if X_gadf is not None
+            else compute_single_gadf(X_norm[dynamic_idx, yload_ch])
+        )
         win_samples_for_plot[win_label] = {
             "x_1d": X_1d[dynamic_idx, yload_ch].copy(),
-            "gasf": X_gasf[dynamic_idx, yload_ch].astype(np.float32),
-            "gadf": X_gadf[dynamic_idx, yload_ch].astype(np.float32),
+            "gadf": gadf_dyn,
         }
 
         elapsed = time.time() - t0
+        sz_mb = os.path.getsize(npz_path) / 1e6
+        gadf_info = str(X_gadf.shape) if X_gadf is not None else "on-the-fly (X_paa)"
         print(
             f"[OK] {dataset_name:16s} | {win_label:5s} | "
-            f"X_1d: {str(X_1d.shape):18s} | GASF/GADF: {str(X_gasf.shape):20s} | {elapsed:.2f}s"
+            f"X_1d: {str(X_1d.shape):18s} | GADF: {gadf_info:20s} | {sz_mb:6.1f} MB | {elapsed:.2f}s"
         )
-        del X_1d, X_norm, X_gasf, X_gadf
+        del X_1d, X_paa, X_norm, X_gadf, save_payload
         gc.collect()
 
     # Salva figura comparativa multiescala (15min, 30min, 1h, 2h)
@@ -422,7 +428,19 @@ def process_dataset_gaf(
     plot_multi_window_comparison(dataset_name, win_samples_for_plot, multiscale_fig_path)
 
 
+def parse_args():
+    p = argparse.ArgumentParser(description="Gera tensores pareados 1D + GADF (sem GASF) comprimidos em .npz")
+    p.add_argument("--force", action="store_true", help="Regrava os arquivos .npz mesmo se já existirem")
+    p.add_argument(
+        "--on-the-fly",
+        action="store_true",
+        help="Salva apenas X_1d + X_paa + scalers (sem pré-gravar X_gadf no disco; ~0,55 GB total)",
+    )
+    return p.parse_args()
+
+
 def main():
+    args = parse_args()
     t_start = time.time()
     os.makedirs(FIGURES_DIR, exist_ok=True)
 
@@ -430,18 +448,21 @@ def main():
     df_full = pd.read_csv(FULL_CSV_PATH)
     timestamps = df_full["Timestamp"].to_numpy()
 
-    print("\n2. Verificando/Gerando tensores pareados (1D + GASF 32x32 + GADF 32x32) para cada bomba...")
+    modo = "ON-THE-FLY (X_1d + X_paa)" if args.on_the_fly else "COMPRIMIDO (X_1d + X_paa + GADF 32x32, sem GASF)"
+    print(f"\n2. Verificando/Gerando tensores pareados [{modo}] para cada bomba...")
     for pump_name, suffix in PUMPS_MAP.items():
         expected_npz = [
             os.path.join(OUTPUT_DIR, pump_name, f"sequencias_{pump_name}_{w}.npz")
             for w in WINDOWS_CONFIG
         ]
-        if all(has_complete_gaf_npz(p) for p in expected_npz):
+        if (not args.force) and all(has_complete_gaf_npz(p, require_gadf=(not args.on_the_fly)) for p in expected_npz):
             for w, cfg in WINDOWS_CONFIG.items():
+                p_path = os.path.join(OUTPUT_DIR, pump_name, f"sequencias_{pump_name}_{w}.npz")
                 n_w = (len(df_full) - cfg["window_size"]) // cfg["stride"] + 1
+                sz_mb = os.path.getsize(p_path) / 1e6
                 print(
                     f"[JÁ GERADO] {pump_name:16s} | {w:5s} | "
-                    f"X_1d: ({n_w}, 4, {cfg['window_size']}) | GASF/GADF: ({n_w}, 4, 32, 32)"
+                    f"X_1d: ({n_w}, 4, {cfg['window_size']}) | GADF: ({n_w}, 4, 32, 32) | {sz_mb:6.1f} MB"
                 )
             continue
 
@@ -457,12 +478,13 @@ def main():
             timestamps=timestamps,
             data_matrix=data_matrix,
             feature_cols=pump_cols,
+            force=args.force,
+            on_the_fly=args.on_the_fly,
         )
 
     del df_full
     gc.collect()
-    print("\n3. Dataset_Completo agora é construído dinamicamente pela concatenação das 6 bombas (sem duplicar .npz em disco).")
-
+    print("\n3. Dataset_Completo é construído dinamicamente pela concatenação das 6 bombas (sem duplicar .npz em disco).")
     print(f"\n4. Figuras demonstrativas salvas em: {FIGURES_DIR}")
     print(f"Concluído com sucesso em {time.time() - t_start:.2f}s!")
 
